@@ -1,59 +1,96 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Shining English Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Tổng quan
+Repository này là backend API cho Shining English, xây dựng trên Laravel 12 với PHP 8.3. Dự án áp dụng mô hình base Service/Repository và có unit test cho các layer cốt lõi và model.
 
-## About Laravel
+## Yêu cầu
+- PHP 8.3+
+- Composer
+- Node.js + npm (chỉ cần nếu build frontend assets)
+- Một DB được Laravel hỗ trợ (MySQL/PostgreSQL/SQLite)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Cài đặt
+1. Cài dependencies PHP:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+composer install
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+2. Tạo file môi trường:
 
-## Learning Laravel
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+3. Cấu hình DB trong `.env`, sau đó chạy migrations:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan migrate
+```
 
-## Laravel Sponsors
+4. Chạy ứng dụng:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan serve
+```
 
-### Premium Partners
+## Cấu trúc dự án
+Các layer chính trong dự án:
+- `app/Repositories`:
+  - `IRepository.php`: Contract repository cơ bản
+  - `Repository.php`: Base repository với query helpers và pagination
+- `app/Services`:
+  - `IService.php`: Contract service cơ bản
+  - `Service.php`: Base service (ủy quyền cho repository)
+- `app/ValueObjects/QueryOption.php`:
+  - Đóng gói options phân trang và eager-load
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Kiến trúc phân lớp
+Backend theo mô hình phân lớp đơn giản để tách trách nhiệm rõ ràng và dễ test.
 
-## Contributing
+### Service Layer
+- Mục đích: Điều phối business logic và workflow.
+- Phụ thuộc: Interface repository (`IRepository`) và các service khác.
+- Không nên: Truy cập DB/Eloquent trực tiếp.
+- Base class: `app/Services/Service.php`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Repository Layer
+- Mục đích: Đóng gói truy vấn dữ liệu.
+- Phụ thuộc: Eloquent models và `QueryOption`.
+- Base class: `app/Repositories/Repository.php`.
+- Hành vi chung: `getAll`, `getBy`, `paginateAll`, `paginateBy`, `autoComplete`.
 
-## Code of Conduct
+### Value Objects
+- Mục đích: Đối tượng nhỏ để truyền options có cấu trúc.
+- Ví dụ: `QueryOption` chứa `page`, `perPage`, `with`.
+- Cách dùng: Truyền vào method của repository/service để chuẩn hóa query options.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Ví dụ luồng xử lý
+1. Controller nhận request.
+2. Controller gọi method trong Service.
+3. Service gọi Repository kèm `QueryOption`.
+4. Repository trả models/collections/paginators về Service.
+5. Service trả response DTO/resource cho Controller.
 
-## Security Vulnerabilities
+## Testing
+Unit tests viết bằng Pest.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Chạy tất cả unit tests:
 
-## License
+```bash
+php artisan test --compact --testsuite=Unit
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Chạy coverage:
+
+```bash
+php artisan test --compact --testsuite=Unit --coverage
+```
+
+Các unit test trong `tests/Unit/Models` tự động dùng `RefreshDatabase`.
+
+## Ghi chú
+- Base repository triển khai các hành vi query/pagination/auto-complete phổ biến.
+- `QueryOption::getPage()` sẽ throw `TypeError` nếu gọi khi chưa set.
+- Khi thay đổi base layer, hãy update unit tests tương ứng.
