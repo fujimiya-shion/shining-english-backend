@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Hash;
 
 it('defines fillable attributes', function (): void {
@@ -9,6 +11,10 @@ it('defines fillable attributes', function (): void {
     expect($user->getFillable())->toEqual([
         'name',
         'email',
+        'phone',
+        'birthday',
+        'avatar',
+        'city_id',
         'password',
     ]);
 });
@@ -27,14 +33,26 @@ it('casts attributes correctly', function (): void {
 
     expect($user->getCasts())->toMatchArray([
         'email_verified_at' => 'datetime',
+        'birthday' => 'date',
         'password' => 'hashed',
     ]);
 });
 
+it('defines city relation', function (): void {
+    $method = new ReflectionMethod(User::class, 'city');
+
+    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+});
+
+it('defines quiz attempts relation', function (): void {
+    $method = new ReflectionMethod(User::class, 'quizAttempts');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+});
+
 it('hashes password when setting it', function (): void {
-    $user = User::factory()->create([
-        'password' => 'secret',
-    ]);
+    $user = new User;
+    $user->password = 'secret';
 
     expect($user->password)->not->toBe('secret');
     expect(Hash::check('secret', $user->password))->toBeTrue();
