@@ -11,19 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('courses', function (Blueprint $table) {
+        Schema::create('lessons', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug');
-            $table->integer('price');
-            $table->boolean('status')->default(true);
-            $table->string('thumbnail')->nullable();
-            $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('course_id');
+            $table->string('video_url');
+            $table->integer('star_reward_video')->default(0);
+            $table->integer('star_reward_quiz')->default(0);
+            $table->boolean('has_quiz')->default(false);
             $table->softDeletes();
             $table->timestamps();
 
+            $table->index('course_id');
             $table->fullText(['name', 'slug']);
-            $table->index('category_id');
         });
     }
 
@@ -32,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('courses');
+        Schema::dropIfExists('lessons');
     }
 };

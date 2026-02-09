@@ -2,9 +2,32 @@
 
 namespace App\Models;
 
+use App\Traits\Slugable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
-    //
+    use SoftDeletes, Slugable;
+
+    protected $fillable = [
+        'name',
+        'slug',
+        'price',
+        'status',
+        'thumbnail',
+        'category_id',
+    ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(Lesson::class);
+    }
 }
