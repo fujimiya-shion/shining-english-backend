@@ -1,0 +1,33 @@
+name: Email on PR
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  send-email:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[PR] ${{ github.repository }} #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          to: ${{ secrets.PR_NOTIFY_EMAILS }}
+          from: ${{ secrets.SMTP_FROM }}
+          content_type: text/plain
+          body: |
+            A pull request needs attention.
+
+            Repository: ${{ github.repository }}
+            PR: #${{ github.event.pull_request.number }}
+            Title: ${{ github.event.pull_request.title }}
+            Author: ${{ github.event.pull_request.user.login }}
+            URL: ${{ github.event.pull_request.html_url }}
+
+            Base: ${{ github.event.pull_request.base.ref }}
+            Head: ${{ github.event.pull_request.head.ref }}

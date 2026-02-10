@@ -73,9 +73,14 @@ class QueryOption
      |  Factory
      ========================= */
 
-    public static function fromArray(array $raw): self
+    public static function fromArray(array $raw, bool $forcePagination = false): self
     {
         $dto = new self;
+
+        if ($forcePagination) {
+            $dto->setPage(1);
+            $dto->setPerPage(config('const.pagination.default_per_page'));
+        }
 
         if (isset($raw['page'])) {
             $dto->setPage((int) $raw['page']);

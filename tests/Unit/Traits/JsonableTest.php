@@ -1,5 +1,6 @@
 <?php
 
+use App\Traits\Jsonable;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -76,5 +77,51 @@ it('returns error json response with custom values', function (): void {
         'status' => false,
         'status_code' => 422,
         'errors' => ['email' => ['The email field is required.']],
+    ]);
+});
+
+it('returns notfound response', function (): void {
+    $target = new class
+    {
+        use Jsonable;
+    };
+
+    $response = $target->notfound();
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('returns created response', function (): void {
+    $target = new class
+    {
+        use Jsonable;
+    };
+
+    $response = $target->created(['id' => 1]);
+
+    assertJsonResponsePayload($response, 201, [
+        'message' => 'Created',
+        'status' => true,
+        'status_code' => 201,
+        'data' => ['id' => 1],
+    ]);
+});
+
+it('returns deleted response', function (): void {
+    $target = new class
+    {
+        use Jsonable;
+    };
+
+    $response = $target->deleted();
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'Deleted',
+        'status' => true,
+        'status_code' => 200,
     ]);
 });

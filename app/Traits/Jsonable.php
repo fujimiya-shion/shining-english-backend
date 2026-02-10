@@ -1,7 +1,11 @@
 <?php
 
+namespace App\Traits;
+
 use Illuminate\Http\JsonResponse;
-trait Jsonable {
+
+trait Jsonable
+{
     public function success(
         string $message = 'OK',
         mixed $data = null,
@@ -28,5 +32,25 @@ trait Jsonable {
             'status_code' => $statusCode,
             'errors' => $errors,
         ], $statusCode);
+    }
+
+    public function notfound(
+        string $message = 'Not found',
+        mixed $errors = null,
+    ): JsonResponse {
+        return $this->error($message, 404, $errors);
+    }
+
+    public function created(
+        mixed $data,
+        string $message = 'Created',
+    ): JsonResponse {
+        return $this->success($message, $data, 201);
+    }
+
+    public function deleted(
+        string $message = 'Deleted',
+    ): JsonResponse {
+        return $this->success($message, statusCode: 200);
     }
 }
