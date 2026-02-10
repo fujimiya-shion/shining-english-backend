@@ -42,7 +42,7 @@ abstract class Service implements IService
         return $this->repository->update($id, $data);
     }
 
-    public function delete(int $id, bool $force = true): bool
+    public function delete(int $id, bool $force = false): bool
     {
         return $this->repository->delete($id, $force);
     }

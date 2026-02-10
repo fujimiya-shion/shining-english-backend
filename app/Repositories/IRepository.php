@@ -28,7 +28,7 @@ interface IRepository
 
     public function update(int $id, array $data): Model;
 
-    public function delete(int $id, bool $force = true): bool;
+    public function delete(int $id, bool $force = false): bool;
 
     public function count(array $criteria = []): int;
 

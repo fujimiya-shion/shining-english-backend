@@ -73,7 +73,7 @@ test('update delegates to repository', function (): void {
 
 test('delete delegates to repository', function (): void {
     $repository = \Mockery::mock(IRepository::class);
-    $repository->shouldReceive('delete')->once()->with(3, true)->andReturn(true);
+    $repository->shouldReceive('delete')->once()->with(3, false)->andReturn(true);
 
     $service = new TestService($repository);
 

@@ -183,6 +183,18 @@ abstract class Repository implements IRepository
         return $query->count();
     }
 
+    public function delete(int $id, bool $force = false): bool {
+        $query = $this->model->newQuery()->where('id', $id);
+        try {
+            $rowAffected = $force ? $query->forceDelete() : $query->delete();
+            return is_int($rowAffected) && $rowAffected > 0;
+        } catch(Throwable $e) {
+            logger()->error('An error occured when delete model: ' . class_basename($this->model));
+            logger()->error($e->getTraceAsString());
+            throw $e;
+        }
+    }
+
     /* =========================
      |  AutoComplete (NO LIKE)
      ========================= */

@@ -349,6 +349,27 @@ test('nextPrefix returns null for empty string', function (): void {
     expect($result)->toBeNull();
 });
 
+test('delete returns true for existing record', function () {
+    TestModel::query()->create(['id' => 3, 'name' => 'John']);
+    $repository = app()->make(TestRepository::class);
+    $result = $repository->delete(3);
+    expect($result)->toBe(true);
+});
+
+test('delete returns false for non existing record', function () {
+    TestModel::query()->create(['id' => 3, 'name' => 'John']);
+    $repository = app()->make(TestRepository::class);
+    $result = $repository->delete(4);
+    expect($result)->toBe(false);
+});
+
+test('delete rethrows exceptions from query delete', function (): void {
+    $repository = new TestRepository(new FailingDeleteModel);
+
+    expect(fn () => $repository->delete(3))
+        ->toThrow(RuntimeException::class);
+});
+
 class TestModel extends Model
 {
     protected $table = 'test_models';
@@ -380,17 +401,21 @@ class FailingCreateModel extends TestModel
     }
 }
 
+class FailingDeleteModel extends TestModel
+{
+    public function newQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = \Mockery::mock(\Illuminate\Database\Eloquent\Builder::class);
+        $query->shouldReceive('where')->once()->with('id', 3)->andReturnSelf();
+        $query->shouldReceive('delete')->once()->andThrow(new RuntimeException('Forced delete failure'));
+
+        return $query;
+    }
+}
+
 class TestRepository extends Repository
 {
-    public function delete(int $id, bool $force = true): bool
-    {
-        $record = $this->model->newQuery()->find($id);
-        if (! $record instanceof Model) {
-            return false;
-        }
-
-        return $force
-            ? (bool) $record->forceDelete()
-            : (bool) $record->delete();
+    public function __construct(TestModel $model) {
+        parent::__construct($model);
     }
 }
