@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__.'/Support/helpers.php';
+require_once __DIR__.'/../app/Traits/Jsonable.php';
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

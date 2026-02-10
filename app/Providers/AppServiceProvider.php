@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\Course\CourseRepository;
+use App\Repositories\Course\ICourseRepository;
+use App\Services\Course\CourseService;
+use App\Services\Course\ICourseService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +15,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ICourseRepository::class, CourseRepository::class);
+        
+        $this->app->bind(ICourseService::class, CourseService::class);
     }
 
     /**
