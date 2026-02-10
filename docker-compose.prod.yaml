@@ -1,0 +1,35 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/prod/Dockerfile
+        image: shining-english-app:prod
+        environment:
+            APP_ENV: production
+            APP_DEBUG: 'false'
+        env_file:
+            - .env
+        networks:
+            - app
+        volumes:
+            - app-code:/var/www/html
+
+    nginx:
+        image: nginx:alpine
+        depends_on:
+            - app
+        ports:
+            - '${APP_PORT:-80}:80'
+        volumes:
+            - app-code:/var/www/html
+            - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf
+        networks:
+            - app
+
+networks:
+    app:
+        driver: bridge
+
+volumes:
+    app-code:
+        driver: local
