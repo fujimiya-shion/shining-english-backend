@@ -7,19 +7,19 @@ use Tests\TestCase;
 uses(TestCase::class);
 
 it('can be instantiated', function (): void {
-    $controller = new CourseController;
+    $controller = app()->make(CourseController::class);
 
     expect($controller)->toBeInstanceOf(CourseController::class);
 });
 
 it('returns null from index for current implementation', function (): void {
-    $controller = new CourseController;
+    $controller = app()->make(CourseController::class);
 
     expect($controller->index(new Request))->toBeNull();
 });
 
 it('inherits success and error json helpers', function (): void {
-    $controller = new CourseController;
+    $controller = app()->make(CourseController::class);
 
     $success = $controller->success('OK', ['id' => 1], 200);
     $error = $controller->error('Bad Request', 400, ['field' => ['invalid']]);
