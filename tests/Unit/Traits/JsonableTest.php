@@ -119,9 +119,9 @@ it('returns deleted response', function (): void {
 
     $response = $target->deleted();
 
-    assertJsonResponsePayload($response, 204, [
+    assertJsonResponsePayload($response, 200, [
         'message' => 'Deleted',
         'status' => true,
-        'status_code' => 204,
+        'status_code' => 200,
     ]);
 });

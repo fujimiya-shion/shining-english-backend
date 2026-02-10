@@ -51,6 +51,6 @@ trait Jsonable
     public function deleted(
         string $message = 'Deleted',
     ): JsonResponse {
-        return $this->success($message, statusCode: 204);
+        return $this->success($message, statusCode: 200);
     }
 }

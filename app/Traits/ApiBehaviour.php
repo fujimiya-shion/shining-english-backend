@@ -6,6 +6,7 @@ use App\Services\IService;
 use App\ValueObjects\MetaPagination;
 use App\ValueObjects\QueryOption;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 trait ApiBehaviour
@@ -60,6 +61,10 @@ trait ApiBehaviour
             $updated = $this->service()->update($id, $data);
 
             return $this->success('Updated', $updated);
+        } catch (ModelNotFoundException $e) {
+            logger()->warning($e->getMessage());
+
+            return $this->notfound();
         } catch (Exception $e) {
             logger()->error($e->getMessage());
 

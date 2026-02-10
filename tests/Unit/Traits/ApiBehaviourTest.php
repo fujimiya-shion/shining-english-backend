@@ -167,10 +167,10 @@ it('returns deleted when delete succeeds', function (): void {
     $controller = makeApiBehaviourController($service);
     $response = $controller->delete(makeRequestWithId(5, 'DELETE'));
 
-    assertJsonResponsePayload($response, 204, [
+    assertJsonResponsePayload($response, 200, [
         'message' => 'Deleted',
         'status' => true,
-        'status_code' => 204,
+        'status_code' => 200,
     ]);
 });
 
