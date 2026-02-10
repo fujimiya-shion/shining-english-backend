@@ -59,6 +59,24 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+    shining_english_mysql_init:
+        image: 'mysql:8.4'
+        depends_on:
+            - shining_english_mysql
+        entrypoint:
+            - sh
+            - -c
+            - >
+                until mysqladmin ping -h shining_english_mysql -p${DB_PASSWORD} --silent; do
+                  sleep 1;
+                done;
+                mysql -h shining_english_mysql -uroot -p${DB_PASSWORD} -e "
+                  CREATE DATABASE IF NOT EXISTS testing;
+                  CREATE USER IF NOT EXISTS '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+                  GRANT ALL PRIVILEGES ON testing.* TO '${DB_USERNAME}'@'%';
+                  FLUSH PRIVILEGES;"
+        networks:
+            - sail
     shining_english_redis:
         image: 'redis:alpine'
         ports:

@@ -6,6 +6,8 @@ EOSQL
 
 if [ -n "$MYSQL_USER" ]; then
 mysql --user=root --password="$MYSQL_ROOT_PASSWORD" <<-EOSQL
-    GRANT ALL PRIVILEGES ON \`testing%\`.* TO '$MYSQL_USER'@'%';
+    CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+    GRANT ALL PRIVILEGES ON \`testing\`.* TO '$MYSQL_USER'@'%';
+    FLUSH PRIVILEGES;
 EOSQL
 fi
