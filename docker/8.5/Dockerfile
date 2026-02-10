@@ -78,9 +78,15 @@ RUN apt-get update && apt-get upgrade -y \
 
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php8.5
 
-RUN sed -i 's|^listen = .*|listen = 9000|' /etc/php/8.5/fpm/pool.d/www.conf \
+RUN mkdir -p /run/php \
+    && chmod 777 /run/php \
+    && sed -i 's|^listen = .*|listen = 9000|' /etc/php/8.5/fpm/pool.d/www.conf \
     && sed -i 's|^user = .*|user = sail|' /etc/php/8.5/fpm/pool.d/www.conf \
-    && sed -i 's|^group = .*|group = sail|' /etc/php/8.5/fpm/pool.d/www.conf
+    && sed -i 's|^group = .*|group = sail|' /etc/php/8.5/fpm/pool.d/www.conf \
+    && sed -i 's|^;\\?error_log = .*|error_log = /proc/self/fd/2|' /etc/php/8.5/fpm/php-fpm.conf \
+    && echo \"error_log = /proc/self/fd/2\" > /etc/php/8.5/fpm/conf.d/zz-docker-log.conf \
+    && touch /var/log/php8.5-fpm.log \
+    && chmod 666 /var/log/php8.5-fpm.log
 
 RUN userdel -r ubuntu
 RUN groupadd --force -g $WWWGROUP sail
