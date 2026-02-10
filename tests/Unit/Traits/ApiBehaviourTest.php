@@ -160,6 +160,20 @@ it('returns error on update exception', function (): void {
     ]);
 });
 
+it('returns notfound on update when record missing', function (): void {
+    $service = \Mockery::mock(IService::class);
+    $service->shouldReceive('update')->once()->andThrow(new Illuminate\Database\Eloquent\ModelNotFoundException);
+
+    $controller = makeApiBehaviourController($service);
+    $response = $controller->update(makeRequestWithId(9, 'PUT', ['name' => 'Missing']));
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
 it('returns deleted when delete succeeds', function (): void {
     $service = \Mockery::mock(IService::class);
     $service->shouldReceive('delete')->once()->with(5)->andReturn(true);
