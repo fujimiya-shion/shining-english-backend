@@ -1,6 +1,8 @@
 <?php
 
 use App\Filament\Resources\Courses\Schemas\CourseForm;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -11,20 +13,26 @@ test('course form defines expected components', function (): void {
     $components = schemaComponentMap($schema);
 
     expect(array_keys($components))->toEqual([
+        'status',
         'name',
         'slug',
-        'price',
-        'status',
-        'thumbnail',
         'category_id',
+        'price',
+        'rating',
+        'learned',
+        'thumbnail',
+        'description',
     ]);
 
+    expect($components['status'])->toBeInstanceOf(Toggle::class);
     expect($components['name'])->toBeInstanceOf(TextInput::class);
     expect($components['slug'])->toBeInstanceOf(TextInput::class);
-    expect($components['price'])->toBeInstanceOf(TextInput::class);
-    expect($components['status'])->toBeInstanceOf(Toggle::class);
-    expect($components['thumbnail'])->toBeInstanceOf(TextInput::class);
     expect($components['category_id'])->toBeInstanceOf(Select::class);
+    expect($components['price'])->toBeInstanceOf(TextInput::class);
+    expect($components['rating'])->toBeInstanceOf(TextInput::class);
+    expect($components['learned'])->toBeInstanceOf(TextInput::class);
+    expect($components['thumbnail'])->toBeInstanceOf(FileUpload::class);
+    expect($components['description'])->toBeInstanceOf(RichEditor::class);
 });
 
 test('course form marks required fields', function (): void {

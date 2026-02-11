@@ -11,7 +11,7 @@ test('course resource extends base resource', function (): void {
 
 test('course resource uses course model and title attribute', function (): void {
     expect(CourseResource::getModel())->toBe(Course::class);
-    expect(CourseResource::getRecordTitleAttribute())->toBe('Course');
+    expect(CourseResource::getRecordTitleAttribute())->toBe('name');
 });
 
 test('course resource defines expected pages', function (): void {

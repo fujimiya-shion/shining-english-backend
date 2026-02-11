@@ -6,17 +6,21 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 
 test('courses table defines expected columns', function (): void {
     $table = CoursesTable::configure(makeTable());
 
     expect(tableColumnNames($table))->toEqual([
+        'thumbnail',
         'name',
         'slug',
         'price',
         'status',
-        'thumbnail',
+        'rating',
+        'learned',
         'category.name',
         'deleted_at',
         'created_at',
@@ -30,8 +34,12 @@ test('courses table registers trashed filter', function (): void {
     $filters = $table->getFilters();
     $filters = array_values($filters);
 
-    expect($filters)->toHaveCount(1);
-    expect($filters[0])->toBeInstanceOf(TrashedFilter::class);
+    expect($filters)->toHaveCount(3);
+    expect(actionClassList($filters))->toEqual([
+        TernaryFilter::class,
+        SelectFilter::class,
+        TrashedFilter::class,
+    ]);
 });
 
 test('courses table registers edit record action', function (): void {

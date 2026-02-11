@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
-    use SoftDeletes, Slugable;
+    use Slugable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -19,6 +19,9 @@ class Course extends Model
         'status',
         'thumbnail',
         'category_id',
+        'description',
+        'rating',
+        'learned',
     ];
 
     public function category(): BelongsTo

@@ -24,7 +24,7 @@ class CourseResource extends BaseResource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'Course';
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected function service(): IService
     {

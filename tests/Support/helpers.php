@@ -1,10 +1,16 @@
 <?php
 
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Schemas\Components\Component as SchemaComponent;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Http\JsonResponse;
+use Livewire\Component as LivewireComponent;
 
 if (! function_exists('assertRepositoryContract')) {
     /**
@@ -125,7 +131,40 @@ if (! function_exists('assertPolicyChecksPermission')) {
 if (! function_exists('makeSchema')) {
     function makeSchema(): Schema
     {
-        return Schema::make();
+        $host = new class extends LivewireComponent implements HasSchemas
+        {
+            public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+            {
+                return null;
+            }
+
+            public function getOldSchemaState(string $statePath): mixed
+            {
+                return null;
+            }
+
+            public function getSchemaComponent(string $key, bool $withHidden = false, array $skipComponentsChildContainersWhileSearching = []): SchemaComponent|Action|ActionGroup|null
+            {
+                return null;
+            }
+
+            public function getSchema(string $name): ?Schema
+            {
+                return null;
+            }
+
+            public function currentlyValidatingSchema(?Schema $schema): void
+            {
+                //
+            }
+
+            public function getDefaultTestingSchemaName(): ?string
+            {
+                return null;
+            }
+        };
+
+        return Schema::make($host);
     }
 }
 
@@ -136,10 +175,27 @@ if (! function_exists('schemaComponentMap')) {
     function schemaComponentMap(Schema $schema): array
     {
         $components = $schema->getComponents(withActions: false, withHidden: true);
+
+        return collectSchemaComponents($components);
+    }
+}
+
+if (! function_exists('collectSchemaComponents')) {
+    /**
+     * @param  array<int, mixed>  $components
+     * @return array<string, object>
+     */
+    function collectSchemaComponents(array $components): array
+    {
         $map = [];
 
         foreach ($components as $component) {
-            if (! method_exists($component, 'getName')) {
+            if (is_object($component) && method_exists($component, 'getChildComponents')) {
+                $children = $component->getChildComponents();
+                $map = array_merge($map, collectSchemaComponents($children));
+            }
+
+            if (! is_object($component) || ! method_exists($component, 'getName')) {
                 continue;
             }
 

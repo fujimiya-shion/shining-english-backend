@@ -14,6 +14,9 @@ it('defines fillable attributes', function (): void {
         'status',
         'thumbnail',
         'category_id',
+        'description',
+        'rating',
+        'learned',
     ]);
 });
 
