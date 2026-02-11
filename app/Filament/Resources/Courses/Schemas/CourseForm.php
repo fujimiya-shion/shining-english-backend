@@ -23,13 +23,13 @@ class CourseForm
                         Toggle::make('status')
                             ->required()
                             ->inline(false)
+                            ->default(true)
                             ->columnSpanFull(),
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255)
                             ->columnSpan(8),
                         TextInput::make('slug')
-                            ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
                             ->helperText('Auto-generate from name if left unchanged.')

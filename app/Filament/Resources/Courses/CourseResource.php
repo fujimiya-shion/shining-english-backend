@@ -22,7 +22,7 @@ class CourseResource extends BaseResource
 {
     protected static ?string $model = Course::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::BookOpen;
 
     protected static ?string $recordTitleAttribute = 'name';
 
