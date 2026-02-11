@@ -94,3 +94,4 @@ Các unit test trong `tests/Unit/Models` tự động dùng `RefreshDatabase`.
 - Base repository triển khai các hành vi query/pagination/auto-complete phổ biến.
 - `QueryOption::getPage()` sẽ throw `TypeError` nếu gọi khi chưa set.
 - Khi thay đổi base layer, hãy update unit tests tương ứng.
+ 
