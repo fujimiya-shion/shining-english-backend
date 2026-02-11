@@ -8,7 +8,10 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -18,17 +21,27 @@ class CoursesTable
     {
         return $table
             ->columns([
+                ImageColumn::make('thumbnail')
+                    ->square()
+                    ->disk('public'),
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('slug')
                     ->searchable(),
                 TextColumn::make('price')
-                    ->money()
+                    ->money('VND')
                     ->sortable(),
                 IconColumn::make('status')
                     ->boolean(),
-                TextColumn::make('thumbnail')
-                    ->searchable(),
+                TextColumn::make('rating')
+                    ->numeric(1)
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('learned')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('category.name')
                     ->searchable(),
                 TextColumn::make('deleted_at')
@@ -45,6 +58,11 @@ class CoursesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                TernaryFilter::make('status'),
+                SelectFilter::make('category_id')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
                 TrashedFilter::make(),
             ])
             ->recordActions([
