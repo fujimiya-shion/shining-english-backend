@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
-class Admin extends Authenticatable
+class Admin extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\AdminFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasPanelShield, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +35,8 @@ class Admin extends Authenticatable
         'remember_token',
     ];
 
+    protected string $guard_name = 'admin';
+
     /**
      * Get the attributes that should be cast.
      *
@@ -43,5 +48,10 @@ class Admin extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected function getDefaultGuardName(): string
+    {
+        return $this->guard_name;
     }
 }
