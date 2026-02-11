@@ -21,6 +21,12 @@ pest()->extend(Tests\TestCase::class)
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Models');
 
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Policies');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Filament');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
@@ -51,3 +57,9 @@ function something()
 {
     // ..
 }
+
+afterEach(function (): void {
+    if (class_exists(\Mockery::class)) {
+        \Mockery::close();
+    }
+});
