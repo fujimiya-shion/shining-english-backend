@@ -19,15 +19,27 @@ jobs:
           subject: "[PR] ${{ github.repository }} #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
           to: ${{ secrets.PR_NOTIFY_EMAILS }}
           from: ${{ secrets.SMTP_FROM }}
-          content_type: text/plain
-          body: |
-            A pull request needs attention.
-
-            Repository: ${{ github.repository }}
-            PR: #${{ github.event.pull_request.number }}
-            Title: ${{ github.event.pull_request.title }}
-            Author: ${{ github.event.pull_request.user.login }}
-            URL: ${{ github.event.pull_request.html_url }}
-
-            Base: ${{ github.event.pull_request.base.ref }}
-            Head: ${{ github.event.pull_request.head.ref }}
+          html_body: |
+            <!doctype html>
+            <html>
+              <head>
+                <meta charset="utf-8" />
+                <title>PR Notification</title>
+              </head>
+              <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #111;">
+                <h2 style="margin: 0 0 12px;">Pull request needs attention</h2>
+                <p style="margin: 0 0 16px;">
+                  Repository: <strong>${{ github.repository }}</strong>
+                </p>
+                <ul style="padding-left: 18px; margin: 0 0 16px;">
+                  <li><strong>PR:</strong> #${{ github.event.pull_request.number }}</li>
+                  <li><strong>Title:</strong> ${{ github.event.pull_request.title }}</li>
+                  <li><strong>Author:</strong> ${{ github.event.pull_request.user.login }}</li>
+                  <li><strong>Base:</strong> ${{ github.event.pull_request.base.ref }}</li>
+                  <li><strong>Head:</strong> ${{ github.event.pull_request.head.ref }}</li>
+                </ul>
+                <p style="margin: 0;">
+                  <a href="${{ github.event.pull_request.html_url }}">Open the PR</a>
+                </p>
+              </body>
+            </html>
