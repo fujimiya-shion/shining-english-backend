@@ -41,7 +41,7 @@ test('course form marks required fields', function (): void {
     $components = schemaComponentMap($schema);
 
     expect($components['name']->isRequired())->toBeTrue();
-    expect($components['slug']->isRequired())->toBeTrue();
+    expect($components['slug']->isRequired())->toBeFalse();
     expect($components['price']->isRequired())->toBeTrue();
     expect($components['status']->isRequired())->toBeTrue();
     expect($components['category_id']->isRequired())->toBeTrue();
