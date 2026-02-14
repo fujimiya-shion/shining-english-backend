@@ -1,0 +1,18 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/* Only constrain the preview after a file is uploaded */
+.lesson-video-upload .filepond--root.filepond--has-items {
+    max-height: 220px;
+}
+
+.lesson-video-upload .filepond--root.filepond--has-items .filepond--item-panel,
+.lesson-video-upload .filepond--root.filepond--has-items .filepond--file,
+.lesson-video-upload .filepond--root.filepond--has-items .filepond--file-poster,
+.lesson-video-upload .filepond--root.filepond--has-items video {
+    height: 200px;
+    max-height: 200px;
+}
+
+.lesson-video-upload .filepond--root.filepond--has-items video {
+    object-fit: cover;
+}
