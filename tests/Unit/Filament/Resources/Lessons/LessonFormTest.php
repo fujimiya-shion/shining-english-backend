@@ -36,7 +36,6 @@ test('lesson form marks required fields', function (): void {
     $components = schemaComponentMap($schema);
 
     expect($components['name']->isRequired())->toBeTrue();
-    expect($components['slug']->isRequired())->toBeTrue();
     expect($components['course_id']->isRequired())->toBeTrue();
     expect($components['video_url']->isRequired())->toBeTrue();
 });

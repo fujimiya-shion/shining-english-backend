@@ -24,10 +24,9 @@ class LessonForm
                             ->maxLength(255)
                             ->columnSpan(8),
                         TextInput::make('slug')
-                            ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
-                            ->helperText('Auto-generate from name if left unchanged.')
+                            ->helperText('Leave empty to auto-generate from name.')
                             ->columnSpan(4),
                         Select::make('course_id')
                             ->relationship('course', 'name')
@@ -39,23 +38,25 @@ class LessonForm
                             ->label('Video')
                             ->required()
                             ->acceptedFileTypes(['video/*'])
-                            ->disk('public')
+                            ->disk('local')
                             ->directory('lessons')
-                            ->visibility('public')
                             ->extraAttributes(['class' => 'lesson-video-upload'])
                             ->columnSpan(12),
                         TextInput::make('star_reward_video')
                             ->numeric()
                             ->minValue(0)
                             ->step(1)
+                            ->default(0)
                             ->columnSpan(4),
                         TextInput::make('star_reward_quiz')
                             ->numeric()
                             ->minValue(0)
                             ->step(1)
+                            ->default(0)
                             ->columnSpan(4),
                         Toggle::make('has_quiz')
                             ->inline(false)
+                            ->default(false)
                             ->columnSpan(4),
                     ]),
             ]);
