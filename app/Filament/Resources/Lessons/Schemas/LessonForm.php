@@ -8,6 +8,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class LessonForm
@@ -58,10 +60,19 @@ class LessonForm
                         Toggle::make('has_quiz')
                             ->inline(false)
                             ->default(false)
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, ?bool $state): void {
+                                if ($state) {
+                                    $set('quiz.pass_percent', 80);
+                                } else {
+                                    $set('quiz', null);
+                                }
+                            })
                             ->columnSpan(4),
                     ]),
                 Section::make('Quiz')
                     ->relationship('quiz')
+                    ->visible(fn (Get $get): bool => (bool) $get('has_quiz'))
                     ->schema([
                         TextInput::make('pass_percent')
                             ->label('Pass Percent')
