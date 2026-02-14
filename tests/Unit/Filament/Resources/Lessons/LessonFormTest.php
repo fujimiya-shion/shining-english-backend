@@ -1,13 +1,14 @@
 <?php
 
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
+use App\Models\Lesson;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 
 test('lesson form defines expected components', function (): void {
-    $schema = LessonForm::configure(makeSchema());
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
 
     $components = schemaComponentMap($schema);
 
@@ -19,6 +20,7 @@ test('lesson form defines expected components', function (): void {
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
+        'pass_percent',
     ]);
 
     expect($components['name'])->toBeInstanceOf(TextInput::class);
@@ -31,17 +33,18 @@ test('lesson form defines expected components', function (): void {
 });
 
 test('lesson form marks required fields', function (): void {
-    $schema = LessonForm::configure(makeSchema());
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
 
     $components = schemaComponentMap($schema);
 
     expect($components['name']->isRequired())->toBeTrue();
     expect($components['course_id']->isRequired())->toBeTrue();
     expect($components['video_url']->isRequired())->toBeTrue();
+    expect($components['pass_percent']->isRequired())->toBeTrue();
 });
 
 test('lesson form configures numeric star inputs', function (): void {
-    $schema = LessonForm::configure(makeSchema());
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
 
     $components = schemaComponentMap($schema);
 

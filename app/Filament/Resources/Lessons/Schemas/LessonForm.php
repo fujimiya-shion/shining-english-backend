@@ -7,6 +7,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class LessonForm
@@ -59,6 +60,19 @@ class LessonForm
                             ->default(false)
                             ->columnSpan(4),
                     ]),
+                Section::make('Quiz')
+                    ->relationship('quiz')
+                    ->schema([
+                        TextInput::make('pass_percent')
+                            ->label('Pass Percent')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(1)
+                            ->default(80)
+                            ->required(),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }

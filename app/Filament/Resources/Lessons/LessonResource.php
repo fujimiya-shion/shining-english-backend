@@ -6,6 +6,7 @@ use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Lessons\Pages\CreateLesson;
 use App\Filament\Resources\Lessons\Pages\EditLesson;
 use App\Filament\Resources\Lessons\Pages\ListLessons;
+use App\Filament\Resources\Lessons\RelationManagers\QuizRelationManager;
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Filament\Resources\Lessons\Tables\LessonsTable;
 use App\Models\Lesson;
@@ -43,7 +44,9 @@ class LessonResource extends BaseResource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            QuizRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
