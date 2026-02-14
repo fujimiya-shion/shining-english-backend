@@ -12,6 +12,12 @@ class Lesson extends Model
 {
     use SoftDeletes, Slugable;
 
+    protected $attributes = [
+        'star_reward_video' => 0,
+        'star_reward_quiz' => 0,
+        'has_quiz' => false,
+    ];
+
     protected $fillable = [
         'name',
         'slug',

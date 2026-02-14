@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Resources\Quizzes\Schemas\QuizForm;
-use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 

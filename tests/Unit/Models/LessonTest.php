@@ -4,6 +4,14 @@ use App\Models\Lesson;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+test('lesson model defaults star rewards to zero', function (): void {
+    $lesson = new Lesson();
+
+    expect($lesson->star_reward_video)->toBe(0);
+    expect($lesson->star_reward_quiz)->toBe(0);
+    expect($lesson->has_quiz)->toBeFalse();
+});
+
 it('defines fillable attributes', function (): void {
     $model = new Lesson;
 
