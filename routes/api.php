@@ -17,5 +17,6 @@ Route::prefix('/v1')->group(function () {
         ->group(function () {
             Route::get('/', 'index');
             Route::get('/{id}', 'show');
+            Route::get('/{id}/quiz', 'quiz');
         });
 });
