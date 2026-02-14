@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Services\Lesson\ILessonService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\Lesson;
+use App\Models\Quiz;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
@@ -12,6 +15,25 @@ uses(TestCase::class);
 afterEach(function (): void {
     \Mockery::close();
 });
+
+function makeLessonRequestWithId(int $id): Request
+{
+    $request = Request::create('/', 'GET');
+
+    $request->setRouteResolver(function () use ($id) {
+        return new class($id)
+        {
+            public function __construct(private int $id) {}
+
+            public function parameter(string $key, $default = null)
+            {
+                return $key === 'id' ? $this->id : $default;
+            }
+        };
+    });
+
+    return $request;
+}
 
 it('can be instantiated', function (): void {
     $controller = app()->make(LessonController::class);
@@ -40,5 +62,82 @@ it('returns success response from index', function (): void {
             'total' => 0,
             'page_count' => 0,
         ],
+    ]);
+});
+
+it('returns notfound when lesson quiz has no lesson record', function (): void {
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn(null);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->quiz(makeLessonRequestWithId(10));
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('returns notfound when lesson quiz has no quiz record', function (): void {
+    $relation = \Mockery::mock(HasOne::class);
+    $relation->shouldReceive('with')
+        ->once()
+        ->with(['questions.answers'])
+        ->andReturnSelf();
+    $relation->shouldReceive('first')
+        ->once()
+        ->andReturn(null);
+
+    $lesson = \Mockery::mock(Lesson::class)->makePartial();
+    $lesson->shouldReceive('quiz')
+        ->once()
+        ->andReturn($relation);
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->quiz(makeLessonRequestWithId(10));
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('returns quiz data for lesson quiz endpoint', function (): void {
+    $quiz = new Quiz();
+    $quiz->setAttribute('id', 1);
+
+    $relation = \Mockery::mock(HasOne::class);
+    $relation->shouldReceive('with')
+        ->once()
+        ->with(['questions.answers'])
+        ->andReturnSelf();
+    $relation->shouldReceive('first')
+        ->once()
+        ->andReturn($quiz);
+
+    $lesson = \Mockery::mock(Lesson::class)->makePartial();
+    $lesson->shouldReceive('quiz')
+        ->once()
+        ->andReturn($relation);
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->quiz(makeLessonRequestWithId(10));
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'Get Quiz Successfully',
+        'status' => true,
+        'status_code' => 200,
+        'data' => ['id' => 1],
     ]);
 });
