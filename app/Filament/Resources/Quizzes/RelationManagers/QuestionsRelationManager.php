@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Quizzes\RelationManagers;
 
+use Closure;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -47,6 +48,12 @@ class QuestionsRelationManager extends RelationManager
                             ])
                             ->minItems(2)
                             ->defaultItems(2)
+                            ->rule(function (string $attribute, $value, Closure $fail): void {
+                                $answers = collect($value ?? []);
+                                if (! $answers->contains(fn ($answer) => ($answer['is_correct'] ?? false) === true)) {
+                                    $fail('At least one answer must be marked correct.');
+                                }
+                            })
                             ->columnSpan(12),
                     ]),
             ]);
