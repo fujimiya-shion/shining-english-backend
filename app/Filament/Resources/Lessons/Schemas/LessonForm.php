@@ -37,6 +37,7 @@ class LessonForm
                             ->columnSpan(12),
                         FileUpload::make('video_url')
                             ->label('Video')
+                            ->required()
                             ->acceptedFileTypes(['video/*'])
                             ->disk('public')
                             ->directory('lessons')
