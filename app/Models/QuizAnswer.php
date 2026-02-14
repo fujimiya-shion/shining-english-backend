@@ -13,6 +13,7 @@ class QuizAnswer extends Model
     protected $fillable = [
         'quiz_question_id',
         'content',
+        'is_correct',
     ];
 
     public function question(): BelongsTo

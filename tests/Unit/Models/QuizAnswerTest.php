@@ -9,6 +9,7 @@ it('defines fillable attributes', function (): void {
     expect($model->getFillable())->toEqual([
         'quiz_question_id',
         'content',
+        'is_correct',
     ]);
 });
 
