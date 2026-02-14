@@ -22,6 +22,7 @@ class QuizForm
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->unique(ignoreRecord: true)
                             ->columnSpan(12),
                         TextInput::make('pass_percent')
                             ->label('Pass Percent')
