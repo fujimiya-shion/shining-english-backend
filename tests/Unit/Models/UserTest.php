@@ -50,6 +50,12 @@ it('defines quiz attempts relation', function (): void {
     expect($method->getReturnType()?->getName())->toBe(HasMany::class);
 });
 
+it('defines devices relation', function (): void {
+    $method = new ReflectionMethod(User::class, 'devices');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+});
+
 it('hashes password when setting it', function (): void {
     $user = new User;
     $user->password = 'secret';
