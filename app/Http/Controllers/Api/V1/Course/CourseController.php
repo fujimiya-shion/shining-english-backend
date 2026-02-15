@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ApiController;
 use App\Services\Course\ICourseService;
 use App\Services\IService;
 use App\Traits\ApiBehaviour;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CourseController extends ApiController
 {
@@ -18,5 +20,9 @@ class CourseController extends ApiController
     protected function service(): IService
     {
         return $this->service;
+    }
+
+    public function filter(Request $request): JsonResponse {
+        
     }
 }
