@@ -31,13 +31,13 @@ it('casts attributes correctly', function (): void {
 });
 
 it('defines user relation', function (): void {
-    $method = new ReflectionMethod(UserDevice::class, 'user');
+    $device = new UserDevice;
 
-    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect($device->user())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('defines personal access token relation', function (): void {
-    $method = new ReflectionMethod(UserDevice::class, 'personalAccessToken');
+    $device = new UserDevice;
 
-    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect($device->personalAccessToken())->toBeInstanceOf(BelongsTo::class);
 });
