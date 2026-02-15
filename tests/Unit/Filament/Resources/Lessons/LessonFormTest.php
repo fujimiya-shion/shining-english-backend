@@ -2,7 +2,6 @@
 
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Models\Lesson;
-use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;

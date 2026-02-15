@@ -39,15 +39,21 @@ it('casts attributes correctly', function (): void {
 });
 
 it('defines city relation', function (): void {
-    $method = new ReflectionMethod(User::class, 'city');
+    $user = new User;
 
-    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect($user->city())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('defines quiz attempts relation', function (): void {
-    $method = new ReflectionMethod(User::class, 'quizAttempts');
+    $user = new User;
 
-    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect($user->quizAttempts())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines devices relation', function (): void {
+    $user = new User;
+
+    expect($user->devices())->toBeInstanceOf(HasMany::class);
 });
 
 it('hashes password when setting it', function (): void {
