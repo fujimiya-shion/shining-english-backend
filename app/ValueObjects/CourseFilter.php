@@ -27,6 +27,9 @@ class CourseFilter
         }
 
         $keyword = isset($raw['q']) ? trim((string) $raw['q']) : null;
+        if ($keyword === '' || $keyword === null) {
+            $keyword = isset($raw['name']) ? trim((string) $raw['name']) : null;
+        }
         if ($keyword === '') {
             $keyword = null;
         }

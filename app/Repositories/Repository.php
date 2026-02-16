@@ -199,7 +199,7 @@ abstract class Repository implements IRepository
      |  AutoComplete (NO LIKE)
      ========================= */
 
-    private function nextPrefix(string $prefix): ?string
+    protected function nextPrefix(string $prefix): ?string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -219,6 +219,25 @@ abstract class Repository implements IRepository
         return null;
     }
 
+    protected function applyPrefixMatch(Builder $query, string $column, string $term): Builder
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return $query;
+        }
+
+        $lower = $term;
+        $upper = $this->nextPrefix($term);
+
+        $query->where($column, '>=', $lower);
+
+        if ($upper !== null) {
+            $query->where($column, '<', $upper);
+        }
+
+        return $query;
+    }
+
     public function autoComplete(
         string $term,
         ?string $column = 'name',
@@ -232,18 +251,11 @@ abstract class Repository implements IRepository
             return new Collection;
         }
 
-        $lower = $term;
-        $upper = $this->nextPrefix($term);
-
         $query = $this->model->newQuery();
         $query = $this->applyQueryOption($query, $options);
 
-        $query->select($selectedColumns)
-            ->where($column, '>=', $lower);
-
-        if ($upper !== null) {
-            $query->where($column, '<', $upper);
-        }
+        $query->select($selectedColumns);
+        $this->applyPrefixMatch($query, $column, $term);
 
         return $query
             ->orderBy($column)

@@ -132,3 +132,27 @@ it('filters courses with max only conditions', function (): void {
     expect($result->total())->toBe(1);
     expect($result->items()[0]->name)->toBe('Science 101');
 });
+
+it('matches keyword in the middle of course name', function (): void {
+    $category = Category::factory()->create();
+
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'name' => 'Basic English',
+        'price' => 100,
+        'status' => true,
+        'rating' => 4.0,
+        'learned' => 10,
+    ]);
+
+    $repository = new CourseRepository(new Course);
+
+    $filters = CourseFilter::fromArray([
+        'q' => 'asic',
+    ]);
+
+    $result = $repository->filter($filters);
+
+    expect($result->total())->toBe(1);
+    expect($result->items()[0]->name)->toBe('Basic English');
+});
