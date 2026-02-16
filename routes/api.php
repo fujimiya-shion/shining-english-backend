@@ -8,6 +8,11 @@ Route::prefix('/v1')->group(function () {
     Route::controller(CourseController::class)
         ->prefix('/courses')
         ->group(function () {
+            Route::match(
+                ['get', 'post'],
+                '/filter',
+                'filter',
+            );
             Route::get('/', 'index');
             Route::get('/{id}', 'show');
         });
