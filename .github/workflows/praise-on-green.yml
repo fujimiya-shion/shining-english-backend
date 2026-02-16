@@ -48,7 +48,7 @@ jobs:
           DB_USERNAME: sail
           DB_PASSWORD: password
       - name: Run tests
-        run: ./vendor/bin/pest --coverage --min=100 --testsuite=Unit
+        run: php artisan test --coverage --min=100
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
