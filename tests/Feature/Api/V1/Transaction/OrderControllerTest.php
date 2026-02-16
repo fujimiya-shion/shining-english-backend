@@ -43,6 +43,23 @@ it('creates order from cart', function (): void {
     expect(Cart::query()->where('user_id', $user->id)->count())->toBe(0);
 });
 
+it('returns error when cart is empty', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $response = $this->postJson('/api/v1/orders', [
+        'type' => 'cart',
+        'payment_method' => 'cod',
+    ], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonFragment([
+        'message' => 'Cart is empty',
+    ]);
+});
+
 it('creates order with buy now', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('order')->plainTextToken;
@@ -64,6 +81,23 @@ it('creates order with buy now', function (): void {
     expect($order->total_amount)->toBe(450);
     expect($order->payment_method)->toBe(PaymentMethod::Payos);
     expect(OrderItem::query()->where('order_id', $order->id)->count())->toBe(1);
+});
+
+it('returns validation error when buy now is missing course id', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $response = $this->postJson('/api/v1/orders', [
+        'type' => 'buy_now',
+        'quantity' => 1,
+    ], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonFragment([
+        'message' => 'Course id is required for buy now.',
+    ]);
 });
 
 it('lists and shows user orders', function (): void {
@@ -93,6 +127,22 @@ it('lists and shows user orders', function (): void {
     $show->assertJsonPath('data.id', $order->id);
 });
 
+it('returns not found when order does not exist', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $response = $this->getJson('/api/v1/orders/999999', [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(404);
+    $response->assertJsonFragment([
+        'message' => 'Order not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
 it('cancels an order', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('order')->plainTextToken;
@@ -112,4 +162,20 @@ it('cancels an order', function (): void {
     $response->assertStatus(200);
 
     expect($order->refresh()->status)->toBe(OrderStatus::Cancelled);
+});
+
+it('returns not found when cancelling missing order', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $response = $this->postJson('/api/v1/orders/999999/cancel', [], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(404);
+    $response->assertJsonFragment([
+        'message' => 'Order not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
 });

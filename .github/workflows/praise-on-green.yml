@@ -32,7 +32,7 @@ jobs:
         with:
           php-version: '8.5.2'
           extensions: mbstring, pdo_mysql, bcmath, intl, zip
-          coverage: none
+          coverage: xdebug
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
       - name: Prepare environment
@@ -48,7 +48,7 @@ jobs:
           DB_USERNAME: sail
           DB_PASSWORD: password
       - name: Run tests
-        run: php artisan test --compact --testsuite=Unit
+        run: ./vendor/bin/pest --coverage --min=100 --testsuite=Unit
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
