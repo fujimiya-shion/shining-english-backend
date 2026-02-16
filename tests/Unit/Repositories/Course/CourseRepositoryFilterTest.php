@@ -4,11 +4,11 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
 
 uses(TestCase::class);
-uses(RefreshDatabase::class);
+uses(DatabaseMigrations::class);
 
 it('filters courses by category status ranges and keyword', function (): void {
     $categoryA = Category::factory()->create();
@@ -131,4 +131,28 @@ it('filters courses with max only conditions', function (): void {
 
     expect($result->total())->toBe(1);
     expect($result->items()[0]->name)->toBe('Science 101');
+});
+
+it('matches keyword in the middle of course name', function (): void {
+    $category = Category::factory()->create();
+
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'name' => 'Basic English',
+        'price' => 100,
+        'status' => true,
+        'rating' => 4.0,
+        'learned' => 10,
+    ]);
+
+    $repository = new CourseRepository(new Course);
+
+    $filters = CourseFilter::fromArray([
+        'q' => 'asic',
+    ]);
+
+    $result = $repository->filter($filters);
+
+    expect($result->total())->toBe(1);
+    expect($result->items()[0]->name)->toBe('Basic English');
 });

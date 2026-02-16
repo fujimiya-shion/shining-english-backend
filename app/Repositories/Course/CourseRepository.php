@@ -48,7 +48,7 @@ class CourseRepository extends Repository implements ICourseRepository {
         }
 
         if ($filters->keyword !== null) {
-            $query->where('name', 'like', "%{$filters->keyword}%");
+            $query->whereRaw('MATCH(name, slug) AGAINST (? IN BOOLEAN MODE)', [$filters->keyword]);
         }
 
         $options = $filters->options ?? new QueryOption;

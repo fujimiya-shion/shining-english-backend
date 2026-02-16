@@ -26,6 +26,7 @@ class CourseFilterRequest extends FormRequest
             'learned_min' => ['nullable', 'integer', 'min:0'],
             'learned_max' => ['nullable', 'integer', 'min:0'],
             'q' => ['nullable', 'string'],
+            'name' => ['nullable', 'string'],
             'page' => ['nullable', 'integer', 'min:1'],
             'perPage' => ['nullable', 'integer', 'min:1'],
         ];

@@ -349,6 +349,42 @@ test('nextPrefix returns null for empty string', function (): void {
     expect($result)->toBeNull();
 });
 
+test('nextPrefix returns null when no higher prefix exists', function (): void {
+    $repository = app()->make(TestRepository::class);
+
+    $method = new ReflectionMethod(Repository::class, 'nextPrefix');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($repository, chr(255));
+
+    expect($result)->toBeNull();
+});
+
+test('nextPrefix increments the last byte', function (): void {
+    $repository = app()->make(TestRepository::class);
+
+    $method = new ReflectionMethod(Repository::class, 'nextPrefix');
+    $method->setAccessible(true);
+
+    $result = $method->invoke($repository, 'ab');
+
+    expect($result)->toBe('ac');
+});
+
+test('applyPrefixMatch returns query unchanged for empty term', function (): void {
+    $repository = app()->make(TestRepository::class);
+    $query = TestModel::query();
+    $originalSql = $query->toSql();
+
+    $method = new ReflectionMethod(Repository::class, 'applyPrefixMatch');
+    $method->setAccessible(true);
+
+    /** @var \Illuminate\Database\Eloquent\Builder $result */
+    $result = $method->invoke($repository, $query, 'name', '   ');
+
+    expect($result->toSql())->toBe($originalSql);
+});
+
 test('delete returns true for existing record', function () {
     TestModel::query()->create(['id' => 3, 'name' => 'John']);
     $repository = app()->make(TestRepository::class);
