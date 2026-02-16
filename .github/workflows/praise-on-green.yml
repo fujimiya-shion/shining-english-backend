@@ -13,21 +13,23 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: testing
-          MYSQL_USER: sail
-          MYSQL_PASSWORD: password
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -ppassword" --health-interval=5s --health-timeout=3s --health-retries=10
-          --mount type=bind,source=${{ github.workspace }}/docker/mysql/my.cnf,target=/etc/mysql/conf.d/zz-ngram.cnf,readonly
     steps:
       - uses: actions/checkout@v4
+      - name: Start MySQL (ngram enabled)
+        run: |
+          docker run -d --name mysql84 \
+            -p 3306:3306 \
+            -e MYSQL_ROOT_PASSWORD=password \
+            -e MYSQL_DATABASE=testing \
+            -e MYSQL_USER=sail \
+            -e MYSQL_PASSWORD=password \
+            -v "${{ github.workspace }}/docker/mysql/my.cnf:/etc/mysql/conf.d/zz-ngram.cnf:ro" \
+            -v "${{ github.workspace }}/docker/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh:ro" \
+            mysql:8.4
+
+          until docker exec mysql84 mysqladmin ping -ppassword --silent; do
+            sleep 1;
+          done
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
