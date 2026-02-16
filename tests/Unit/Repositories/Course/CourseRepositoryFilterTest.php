@@ -4,11 +4,11 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Tests\TestCase;
 
 uses(TestCase::class);
-uses(RefreshDatabase::class);
+uses(DatabaseMigrations::class);
 
 it('filters courses by category status ranges and keyword', function (): void {
     $categoryA = Category::factory()->create();

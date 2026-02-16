@@ -40,3 +40,30 @@ it('sets keyword to null when empty', function (): void {
 
     expect($filters->keyword)->toBeNull();
 });
+
+it('falls back to name when q is empty', function (): void {
+    $filters = CourseFilter::fromArray([
+        'q' => '   ',
+        'name' => '  english  ',
+    ]);
+
+    expect($filters->keyword)->toBe('english');
+});
+
+it('keeps status null when invalid', function (): void {
+    $filters = CourseFilter::fromArray([
+        'status' => 'invalid',
+        'q' => null,
+    ]);
+
+    expect($filters->status)->toBeNull();
+    expect($filters->keyword)->toBeNull();
+});
+
+it('sets keyword null when name is empty and q missing', function (): void {
+    $filters = CourseFilter::fromArray([
+        'name' => '   ',
+    ]);
+
+    expect($filters->keyword)->toBeNull();
+});
