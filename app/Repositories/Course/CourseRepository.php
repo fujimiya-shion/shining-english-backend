@@ -56,4 +56,5 @@ class CourseRepository extends Repository implements ICourseRepository {
 
         return $query->paginate(perPage: $options->perPage, page: $options->page);
     }
+
 }
