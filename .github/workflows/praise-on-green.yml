@@ -25,6 +25,7 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -ppassword" --health-interval=5s --health-timeout=3s --health-retries=10
+          --mount type=bind,source=${{ github.workspace }}/docker/mysql/my.cnf,target=/etc/mysql/conf.d/zz-ngram.cnf,readonly
     steps:
       - uses: actions/checkout@v4
       - name: Setup PHP
