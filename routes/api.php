@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Cart\CartController;
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
+use App\Http\Middleware\VerifyUserToken;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/v1')->group(function () {
@@ -23,5 +25,14 @@ Route::prefix('/v1')->group(function () {
             Route::get('/', 'index');
             Route::get('/{id}', 'show');
             Route::get('/{id}/quiz', 'quiz');
+        });
+
+    Route::middleware(VerifyUserToken::class)
+        ->controller(CartController::class)
+        ->prefix('/cart')
+        ->group(function () {
+            Route::get('/items', 'items');
+            Route::get('/count', 'count');
+            Route::delete('/clear', 'clear');
         });
 });
