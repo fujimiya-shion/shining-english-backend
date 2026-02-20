@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -20,6 +21,11 @@ it('allows super admin to view order history list', function (): void {
         'name' => $roleName,
         'guard_name' => 'admin',
     ]);
+    $permission = Permission::query()->firstOrCreate([
+        'name' => 'ViewAny:Order',
+        'guard_name' => 'admin',
+    ]);
+    $role->givePermissionTo($permission);
 
     $admin->assignRole($role);
 
@@ -36,6 +42,15 @@ it('allows super admin to view order detail with items', function (): void {
         'name' => $roleName,
         'guard_name' => 'admin',
     ]);
+    $viewAnyPermission = Permission::query()->firstOrCreate([
+        'name' => 'ViewAny:Order',
+        'guard_name' => 'admin',
+    ]);
+    $viewPermission = Permission::query()->firstOrCreate([
+        'name' => 'View:Order',
+        'guard_name' => 'admin',
+    ]);
+    $role->givePermissionTo([$viewAnyPermission, $viewPermission]);
 
     $admin->assignRole($role);
 
