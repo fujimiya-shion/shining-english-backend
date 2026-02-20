@@ -64,3 +64,13 @@ it('hashes password when setting it', function (): void {
     expect($user->password)->not->toBe('secret');
     expect(Hash::check('secret', $user->password))->toBeTrue();
 });
+
+it('does not rehash an already hashed password', function (): void {
+    $user = new User;
+    $hashed = Hash::make('secret');
+
+    $user->password = $hashed;
+
+    expect($user->password)->toBe($hashed);
+    expect(Hash::check('secret', $user->password))->toBeTrue();
+});
