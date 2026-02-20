@@ -13,26 +13,29 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: testing
-          MYSQL_USER: sail
-          MYSQL_PASSWORD: password
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -ppassword" --health-interval=5s --health-timeout=3s --health-retries=10
     steps:
       - uses: actions/checkout@v4
+      - name: Start MySQL (ngram enabled)
+        run: |
+          docker run -d --name mysql84 \
+            -p 3306:3306 \
+            -e MYSQL_ROOT_PASSWORD=password \
+            -e MYSQL_DATABASE=testing \
+            -e MYSQL_USER=sail \
+            -e MYSQL_PASSWORD=password \
+            -v "${{ github.workspace }}/docker/mysql/my.cnf:/etc/mysql/conf.d/zz-ngram.cnf:ro" \
+            -v "${{ github.workspace }}/docker/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh:ro" \
+            mysql:8.4
+
+          until docker exec mysql84 mysqladmin ping -ppassword --silent; do
+            sleep 1;
+          done
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5.2'
           extensions: mbstring, pdo_mysql, bcmath, intl, zip
-          coverage: none
+          coverage: xdebug
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
       - name: Prepare environment
@@ -48,7 +51,7 @@ jobs:
           DB_USERNAME: sail
           DB_PASSWORD: password
       - name: Run tests
-        run: php artisan test --compact --testsuite=Unit
+        run: php artisan test --coverage --min=100
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

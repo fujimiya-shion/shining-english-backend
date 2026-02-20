@@ -29,6 +29,7 @@ class User extends Authenticatable
         'avatar',
         'city_id',
         'password',
+        'email_verified_at'
     ];
 
     /**

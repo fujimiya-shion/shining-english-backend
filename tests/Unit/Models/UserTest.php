@@ -16,6 +16,7 @@ it('defines fillable attributes', function (): void {
         'avatar',
         'city_id',
         'password',
+        'email_verified_at',
     ]);
 });
 
