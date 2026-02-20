@@ -45,5 +45,14 @@ test('order resource builds query with eager loads', function (): void {
 
     $eagerLoads = $query->getEagerLoads();
     expect($eagerLoads)->toHaveKey('user');
+});
+
+test('order resource builds record query with item eager loads', function (): void {
+    $query = OrderResource::getRecordRouteBindingEloquentQuery();
+
+    expect($query)->toBeInstanceOf(Builder::class);
+
+    $eagerLoads = $query->getEagerLoads();
+    expect($eagerLoads)->toHaveKey('user');
     expect($eagerLoads)->toHaveKey('items.course');
 });

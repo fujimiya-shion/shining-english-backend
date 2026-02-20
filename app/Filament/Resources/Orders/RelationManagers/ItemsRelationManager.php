@@ -31,8 +31,7 @@ class ItemsRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('total')
                     ->getStateUsing(static fn (OrderItem $record): int => $record->price * $record->quantity)
-                    ->money('VND')
-                    ->sortable(),
+                    ->money('VND'),
             ]);
     }
 }
