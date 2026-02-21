@@ -132,10 +132,12 @@ class DashboardStatsOverview extends StatsOverviewWidget
      */
     private function countSparkline($query, string $column): array
     {
-        $series = $this->dateSeries(now()->subDays(6)->startOfDay(), now()->endOfDay());
+        $start = now()->subDays(6)->startOfDay();
+        $end = now()->endOfDay();
+        $series = $this->dateSeries($start, $end);
 
         $rows = $query
-            ->whereBetween($column, [array_key_first($series), array_key_last($series)])
+            ->whereBetween($column, [$start, $end])
             ->selectRaw("DATE({$column}) as date, COUNT(*) as total")
             ->groupBy('date')
             ->pluck('total', 'date')
@@ -156,10 +158,12 @@ class DashboardStatsOverview extends StatsOverviewWidget
      */
     private function sumSparkline($query, string $column, string $sumColumn): array
     {
-        $series = $this->dateSeries(now()->subDays(6)->startOfDay(), now()->endOfDay());
+        $start = now()->subDays(6)->startOfDay();
+        $end = now()->endOfDay();
+        $series = $this->dateSeries($start, $end);
 
         $rows = $query
-            ->whereBetween($column, [array_key_first($series), array_key_last($series)])
+            ->whereBetween($column, [$start, $end])
             ->selectRaw("DATE({$column}) as date, SUM({$sumColumn}) as total")
             ->groupBy('date')
             ->pluck('total', 'date')
