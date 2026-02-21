@@ -20,4 +20,14 @@ class EnrollmentRepository extends Repository implements IEnrollmentRepository
             ->where('course_id', $courseId)
             ->first();
     }
+
+    public function findByUserAndCourseWithTrashed(int $userId, int $courseId): ?Enrollment
+    {
+        return $this->model
+            ->newQuery()
+            ->withTrashed()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->first();
+    }
 }

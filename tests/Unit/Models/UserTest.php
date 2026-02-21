@@ -57,6 +57,12 @@ it('defines devices relation', function (): void {
     expect($user->devices())->toBeInstanceOf(HasMany::class);
 });
 
+it('defines enrollments relation', function (): void {
+    $user = new User;
+
+    expect($user->enrollments())->toBeInstanceOf(HasMany::class);
+});
+
 it('hashes password when setting it', function (): void {
     $user = new User;
     $user->password = 'secret';

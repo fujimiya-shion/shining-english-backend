@@ -24,10 +24,25 @@ it('defines category relation', function (): void {
     $method = new ReflectionMethod(Course::class, 'category');
 
     expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect((new Course)->category())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('defines lessons relation', function (): void {
     $method = new ReflectionMethod(Course::class, 'lessons');
 
     expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Course)->lessons())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines enrollments relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'enrollments');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Course)->enrollments())->toBeInstanceOf(HasMany::class);
+});
+
+it('uses soft deletes', function (): void {
+    $model = new Course;
+
+    expect(method_exists($model, 'trashed'))->toBeTrue();
 });
