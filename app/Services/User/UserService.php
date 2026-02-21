@@ -10,6 +10,7 @@ use App\Services\Service;
 use App\ValueObjects\DeviceInfo;
 use Exception;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 use Throwable;
 class UserService extends Service implements IUserService {
     protected IUserRepository $userRepository;
@@ -23,10 +24,12 @@ class UserService extends Service implements IUserService {
         $this->userDeviceRepository = $userDeviceRepository;
     }
 
-    public function register(string $email, string $password): RegisterResponse {
+    public function register(string $name, string $email, string $phone, string $password): RegisterResponse {
         try {
             $created = $this->userRepository->create([
+                'name' => $name,
                 'email' => $email,
+                'phone' => $phone,
                 'password' => $password,
             ]);
 
@@ -56,6 +59,21 @@ class UserService extends Service implements IUserService {
         } catch(Throwable $e) {
             throw $e;
         }
+    }
+
+    public function logoutByToken(string $token): bool
+    {
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (! $accessToken) {
+            return false;
+        }
+
+        $this->userDeviceRepository->markLoggedOutByTokenId($accessToken->id);
+
+        $accessToken->delete();
+
+        return true;
     }
 
     protected function createUserDevice(User $user, DeviceInfo $device, ?int $tokenId): void {

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Http\Controllers\Api\V1\QuizAttempt\QuizAttemptController;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
+use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Middleware\VerifyUserToken;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,21 @@ Route::prefix('/v1')->group(function () {
             Route::get('/', 'index');
             Route::get('/{id}', 'show');
             Route::get('/{id}/quiz', 'quiz');
+        });
+
+    Route::controller(AuthController::class)
+        ->prefix('/auth')
+        ->group(function () {
+            Route::post('/register', 'register');
+            Route::post('/login', 'login');
+        });
+
+    Route::middleware(VerifyUserToken::class)
+        ->controller(AuthController::class)
+        ->prefix('/auth')
+        ->group(function () {
+            Route::get('/me', 'me');
+            Route::post('/logout', 'logout');
         });
 
     Route::middleware(VerifyUserToken::class)
