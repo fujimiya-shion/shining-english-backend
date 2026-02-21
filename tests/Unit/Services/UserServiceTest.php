@@ -28,7 +28,9 @@ it('registers a user and returns a token response', function (): void {
     $repository->shouldReceive('create')
         ->once()
         ->with([
+            'name' => 'Test User',
             'email' => 'test@example.com',
+            'phone' => '0900000000',
             'password' => 'secret',
         ])
         ->andReturn($user);
@@ -37,7 +39,7 @@ it('registers a user and returns a token response', function (): void {
 
     $service = new UserService($repository, $deviceRepository);
 
-    $response = $service->register('test@example.com', 'secret');
+    $response = $service->register('Test User', 'test@example.com', '0900000000', 'secret');
 
     expect($response)->toBeInstanceOf(RegisterResponse::class);
     expect($response->token)->toBe('test-token');
@@ -49,7 +51,9 @@ it('throws when register result is not a user instance', function (): void {
     $repository->shouldReceive('create')
         ->once()
         ->with([
+            'name' => 'Test User',
             'email' => 'test@example.com',
+            'phone' => '0900000000',
             'password' => 'secret',
         ])
         ->andReturn(new \App\Models\UserDevice);
@@ -57,7 +61,7 @@ it('throws when register result is not a user instance', function (): void {
     $deviceRepository = \Mockery::mock(IUserDeviceRepository::class);
     $service = new UserService($repository, $deviceRepository);
 
-    expect(fn () => $service->register('test@example.com', 'secret'))
+    expect(fn () => $service->register('Test User', 'test@example.com', '0900000000', 'secret'))
         ->toThrow(Exception::class, 'return model is not instance of user');
 });
 
