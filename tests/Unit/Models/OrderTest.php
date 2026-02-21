@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Order;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Models\Order;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -39,4 +39,10 @@ it('defines items relation', function (): void {
     $order = new Order;
 
     expect($order->items())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines enrollments relation', function (): void {
+    $order = new Order;
+
+    expect($order->enrollments())->toBeInstanceOf(HasMany::class);
 });

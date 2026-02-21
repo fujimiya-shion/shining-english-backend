@@ -9,6 +9,7 @@ use App\Repositories\Cart\ICartRepository;
 use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Order\IOrderRepository;
 use App\Repositories\OrderItem\IOrderItemRepository;
+use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Service;
 use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -18,21 +19,28 @@ use RuntimeException;
 class OrderService extends Service implements IOrderService
 {
     protected IOrderRepository $orderRepository;
+
     protected IOrderItemRepository $orderItemRepository;
+
     protected ICartRepository $cartRepository;
+
     protected ICourseRepository $courseRepository;
+
+    protected IEnrollmentService $enrollmentService;
 
     public function __construct(
         IOrderRepository $repository,
         IOrderItemRepository $orderItemRepository,
         ICartRepository $cartRepository,
         ICourseRepository $courseRepository,
+        IEnrollmentService $enrollmentService,
     ) {
         parent::__construct($repository);
         $this->orderRepository = $repository;
         $this->orderItemRepository = $orderItemRepository;
         $this->cartRepository = $cartRepository;
         $this->courseRepository = $courseRepository;
+        $this->enrollmentService = $enrollmentService;
     }
 
     public function listByUserId(int $userId, QueryOption $options): LengthAwarePaginator
@@ -55,6 +63,7 @@ class OrderService extends Service implements IOrderService
 
         return DB::transaction(function () use ($userId, $items, $paymentMethod): Order {
             $total = $items->sum(fn ($item): int => $item->course->price * $item->quantity);
+            $courseIds = $items->pluck('course_id')->unique()->values()->all();
 
             /** @var Order $order */
             $order = $this->orderRepository->create([
@@ -75,6 +84,12 @@ class OrderService extends Service implements IOrderService
             }
 
             $this->cartRepository->clearByUserId($userId);
+
+            DB::afterCommit(function () use ($userId, $courseIds, $order): void {
+                foreach ($courseIds as $courseId) {
+                    $this->enrollmentService->enroll($userId, (int) $courseId, $order->id);
+                }
+            });
 
             return $order->load(['items.course']);
         });
@@ -104,6 +119,10 @@ class OrderService extends Service implements IOrderService
                 'quantity' => $quantity,
                 'price' => $course->price,
             ]);
+
+            DB::afterCommit(function () use ($userId, $course, $order): void {
+                $this->enrollmentService->enroll($userId, $course->id, $order->id);
+            });
 
             return $order->load(['items.course']);
         });
