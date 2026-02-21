@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Courses\CourseResource;
+use App\Filament\Resources\Courses\RelationManagers\EnrollmentsRelationManager;
 use App\Models\Course;
 use App\Services\Course\ICourseService;
 
@@ -18,6 +19,12 @@ test('course resource defines expected pages', function (): void {
     $pages = CourseResource::getPages();
 
     expect($pages)->toHaveKeys(['index', 'create', 'edit']);
+});
+
+test('course resource registers enrollment relation manager', function (): void {
+    $relations = CourseResource::getRelations();
+
+    expect($relations)->toContain(EnrollmentsRelationManager::class);
 });
 
 test('course resource configures form and table', function (): void {
