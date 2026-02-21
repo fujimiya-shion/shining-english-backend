@@ -2,28 +2,36 @@
 
 namespace App\Providers;
 
-use App\Repositories\Course\CourseRepository;
-use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Cart\CartRepository;
 use App\Repositories\Cart\ICartRepository;
+use App\Repositories\Course\CourseRepository;
+use App\Repositories\Course\ICourseRepository;
+use App\Repositories\Enrollment\EnrollmentRepository;
+use App\Repositories\Enrollment\IEnrollmentRepository;
+use App\Repositories\Lesson\ILessonRepository;
+use App\Repositories\Lesson\LessonRepository;
 use App\Repositories\Order\IOrderRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\OrderItem\IOrderItemRepository;
 use App\Repositories\OrderItem\OrderItemRepository;
-use App\Repositories\Lesson\ILessonRepository;
-use App\Repositories\Lesson\LessonRepository;
 use App\Repositories\Quiz\IQuizRepository;
 use App\Repositories\Quiz\QuizRepository;
+use App\Repositories\User\IUserDeviceRepository;
+use App\Repositories\User\IUserRepository;
+use App\Repositories\User\UserDeviceRepository;
+use App\Repositories\User\UserRepository;
 use App\Services\Cart\CartService;
 use App\Services\Cart\ICartService;
+use App\Services\Course\CourseService;
+use App\Services\Course\ICourseService;
+use App\Services\Enrollment\EnrollmentService;
+use App\Services\Enrollment\IEnrollmentService;
+use App\Services\Lesson\ILessonService;
+use App\Services\Lesson\LessonService;
 use App\Services\Order\IOrderService;
 use App\Services\Order\OrderService;
 use App\Services\OrderItem\IOrderItemService;
 use App\Services\OrderItem\OrderItemService;
-use App\Services\Course\CourseService;
-use App\Services\Course\ICourseService;
-use App\Services\Lesson\ILessonService;
-use App\Services\Lesson\LessonService;
 use App\Services\Quiz\IQuizService;
 use App\Services\Quiz\QuizService;
 use App\Services\User\IUserDeviceService;
@@ -40,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ICartRepository::class, CartRepository::class);
+        $this->app->bind(IEnrollmentRepository::class, EnrollmentRepository::class);
         $this->app->bind(IOrderRepository::class, OrderRepository::class);
         $this->app->bind(IOrderItemRepository::class, OrderItemRepository::class);
         $this->app->bind(ICourseRepository::class, CourseRepository::class);
@@ -49,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserDeviceRepository::class, UserDeviceRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
+        $this->app->bind(IEnrollmentService::class, EnrollmentService::class);
         $this->app->bind(IOrderService::class, OrderService::class);
         $this->app->bind(IOrderItemService::class, OrderItemService::class);
         $this->app->bind(ICourseService::class, CourseService::class);

@@ -29,7 +29,7 @@ class User extends Authenticatable
         'avatar',
         'city_id',
         'password',
-        'email_verified_at'
+        'email_verified_at',
     ];
 
     /**
@@ -69,6 +69,11 @@ class User extends Authenticatable
     public function devices(): HasMany
     {
         return $this->hasMany(UserDevice::class);
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 
     public function setPasswordAttribute(string $password): void
