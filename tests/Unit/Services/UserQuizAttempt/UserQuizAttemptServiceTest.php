@@ -10,6 +10,9 @@ use App\Services\UserQuizAttempt\UserQuizAttemptService;
 use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 it('implements shared service contract', function (): void {
     $model = new UserQuizAttempt;
@@ -52,7 +55,7 @@ it('returns attempt history by user', function (): void {
 
     $service = new UserQuizAttemptService($repository);
 
-    $result = $service->historyByUser(10, QueryOption::fromArray([], true));
+    $result = $service->historyByUser(10, new QueryOption(1, 15));
 
     expect($result)->toBe($paginator);
 });
@@ -68,7 +71,7 @@ it('returns attempt history by quiz', function (): void {
 
     $service = new UserQuizAttemptService($repository);
 
-    $result = $service->historyByQuiz(10, QueryOption::fromArray([], true));
+    $result = $service->historyByQuiz(10, new QueryOption(1, 15));
 
     expect($result)->toBe($paginator);
 });
