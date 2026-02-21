@@ -16,6 +16,8 @@ use App\Repositories\OrderItem\IOrderItemRepository;
 use App\Repositories\OrderItem\OrderItemRepository;
 use App\Repositories\Quiz\IQuizRepository;
 use App\Repositories\Quiz\QuizRepository;
+use App\Repositories\UserQuizAttempt\IUserQuizAttemptRepository;
+use App\Repositories\UserQuizAttempt\UserQuizAttemptRepository;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
 use App\Repositories\User\UserDeviceRepository;
@@ -34,6 +36,8 @@ use App\Services\OrderItem\IOrderItemService;
 use App\Services\OrderItem\OrderItemService;
 use App\Services\Quiz\IQuizService;
 use App\Services\Quiz\QuizService;
+use App\Services\UserQuizAttempt\IUserQuizAttemptService;
+use App\Services\UserQuizAttempt\UserQuizAttemptService;
 use App\Services\User\IUserDeviceService;
 use App\Services\User\IUserService;
 use App\Services\User\UserDeviceService;
@@ -54,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ICourseRepository::class, CourseRepository::class);
         $this->app->bind(ILessonRepository::class, LessonRepository::class);
         $this->app->bind(IQuizRepository::class, QuizRepository::class);
+        $this->app->bind(IUserQuizAttemptRepository::class, UserQuizAttemptRepository::class);
         $this->app->bind(IUserRepository::class, UserRepository::class);
         $this->app->bind(IUserDeviceRepository::class, UserDeviceRepository::class);
 
@@ -64,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ICourseService::class, CourseService::class);
         $this->app->bind(ILessonService::class, LessonService::class);
         $this->app->bind(IQuizService::class, QuizService::class);
+        $this->app->bind(IUserQuizAttemptService::class, UserQuizAttemptService::class);
         $this->app->bind(IUserService::class, UserService::class);
         $this->app->bind(IUserDeviceService::class, UserDeviceService::class);
     }
