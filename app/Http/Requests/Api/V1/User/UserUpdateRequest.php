@@ -22,12 +22,12 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'birthday' => ['nullable', 'date'],
-            'avatar' => ['nullable', 'string'],
-            'city_id' => ['nullable', 'integer', 'exists:cities,id'],
-            'password' => ['nullable', 'string', 'min:6'],
+            'name' => ['sometimes', 'filled', 'string', 'max:255'],
+            'phone' => ['sometimes', 'filled', 'string', 'max:30'],
+            'birthday' => ['sometimes', 'filled', 'date'],
+            'avatar' => ['sometimes', 'filled', 'string'],
+            'city_id' => ['sometimes', 'filled', 'integer', 'exists:cities,id'],
+            'password' => ['sometimes', 'filled', 'string', 'min:6'],
         ];
     }
 
@@ -37,7 +37,9 @@ class UserUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.filled' => 'Name is required.',
             'birthday.date' => 'Birthday must be a valid date.',
+            'phone.filled' => 'Phone is required.',
             'city_id.integer' => 'City id must be an integer.',
             'city_id.exists' => 'City not found.',
             'password.min' => 'Password must be at least 6 characters.',

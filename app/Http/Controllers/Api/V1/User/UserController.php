@@ -28,9 +28,9 @@ class UserController extends ApiController
 
             return $this->success('Updated', $updated);
         } catch (ModelNotFoundException $e) {
-            return $this->notfound($e->getMessage());
+            return $this->notfound('User not found');
         } catch (Throwable $e) {
-            return $this->error($e->getMessage(), 422);
+            return $this->error('Update failed', 422);
         }
     }
 }

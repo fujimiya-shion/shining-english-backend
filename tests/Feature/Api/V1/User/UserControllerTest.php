@@ -109,3 +109,19 @@ it('returns error when update fails', function (): void {
         'message' => 'Update failed',
     ]);
 });
+
+it('rejects null for required user fields', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('user-update')->plainTextToken;
+
+    $response = $this->postJson('/api/v1/user/update', [
+        'name' => null,
+        'phone' => null,
+    ], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonPath('errors.name.0', 'Name is required.');
+    $response->assertJsonPath('errors.phone.0', 'Phone is required.');
+});
