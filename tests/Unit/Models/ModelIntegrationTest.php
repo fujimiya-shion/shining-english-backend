@@ -32,6 +32,7 @@ it('resolves model relations across category course lesson quiz question answer 
 
     $user = User::query()->create([
         'name' => 'Test User',
+        'nickname' => 'Tester',
         'email' => 'test@example.com',
         'phone' => '0123456789',
         'city_id' => $city->id,
@@ -94,6 +95,7 @@ it('resolves model relations across category course lesson quiz question answer 
     expect($question->answers)->toHaveCount(1);
     expect($answer->question->is($question))->toBeTrue();
     expect($user->city->is($city))->toBeTrue();
+    expect($user->nickname)->toBe('Tester');
     expect($city->users)->toHaveCount(1);
     expect($user->quizAttempts)->toHaveCount(1);
     expect($attempt->user->is($user))->toBeTrue();
