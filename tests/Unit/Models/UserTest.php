@@ -10,6 +10,7 @@ it('defines fillable attributes', function (): void {
 
     expect($user->getFillable())->toEqual([
         'name',
+        'nickname',
         'email',
         'phone',
         'birthday',

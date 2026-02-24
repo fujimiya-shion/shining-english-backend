@@ -24,6 +24,9 @@ class UserForm
                             ->required()
                             ->maxLength(255)
                             ->columnSpan(6),
+                        TextInput::make('nickname')
+                            ->maxLength(255)
+                            ->columnSpan(6),
                         TextInput::make('email')
                             ->label('Email address')
                             ->email()

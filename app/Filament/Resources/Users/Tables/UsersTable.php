@@ -23,6 +23,8 @@ class UsersTable
                     ->disk('public'),
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('nickname')
+                    ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),

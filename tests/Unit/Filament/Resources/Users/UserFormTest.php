@@ -29,6 +29,7 @@ test('user form defines expected components', function (): void {
 
     expect($childNames)->toEqual([
         'name',
+        'nickname',
         'email',
         'phone',
         'birthday',
@@ -41,11 +42,12 @@ test('user form defines expected components', function (): void {
     expect($gridChildren[0] ?? null)->toBeInstanceOf(TextInput::class);
     expect($gridChildren[1] ?? null)->toBeInstanceOf(TextInput::class);
     expect($gridChildren[2] ?? null)->toBeInstanceOf(TextInput::class);
-    expect($gridChildren[3] ?? null)->toBeInstanceOf(DatePicker::class);
-    expect($gridChildren[4] ?? null)->toBeInstanceOf(Select::class);
-    expect($gridChildren[5] ?? null)->toBeInstanceOf(FileUpload::class);
-    expect($gridChildren[6] ?? null)->toBeInstanceOf(DateTimePicker::class);
-    expect($gridChildren[7] ?? null)->toBeInstanceOf(TextInput::class);
+    expect($gridChildren[3] ?? null)->toBeInstanceOf(TextInput::class);
+    expect($gridChildren[4] ?? null)->toBeInstanceOf(DatePicker::class);
+    expect($gridChildren[5] ?? null)->toBeInstanceOf(Select::class);
+    expect($gridChildren[6] ?? null)->toBeInstanceOf(FileUpload::class);
+    expect($gridChildren[7] ?? null)->toBeInstanceOf(DateTimePicker::class);
+    expect($gridChildren[8] ?? null)->toBeInstanceOf(TextInput::class);
 });
 
 test('user form marks required fields', function (): void {
