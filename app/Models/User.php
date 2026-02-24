@@ -76,6 +76,11 @@ class User extends Authenticatable
         return $this->hasMany(Enrollment::class);
     }
 
+    public function blogUnlocks(): HasMany
+    {
+        return $this->hasMany(BlogUnlock::class);
+    }
+
     public function setPasswordAttribute(string $password): void
     {
         $this->attributes['password'] = Hash::needsRehash($password)
