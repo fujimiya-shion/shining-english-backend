@@ -13,6 +13,7 @@ test('users table defines expected columns', function (): void {
     expect(tableColumnNames($table))->toEqual([
         'avatar',
         'name',
+        'nickname',
         'email',
         'phone',
         'birthday',
