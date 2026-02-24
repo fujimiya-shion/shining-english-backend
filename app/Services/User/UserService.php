@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
 use App\Services\Service;
-use App\Services\Star\IStarService;
 use App\ValueObjects\DeviceInfo;
 use Exception;
 use Illuminate\Support\Facades\Hash;
@@ -37,10 +36,9 @@ class UserService extends Service implements IUserService {
 
             if($created instanceof User) {
                 $token = $created->createToken('user_auth_token')->plainTextToken;
-                dispatch(new InitUserStarJob(
-                    $created, 
-                    app(IStarService::class)
-                ));
+                if ($created->id !== null) {
+                    dispatch(new InitUserStarJob($created->id));
+                }
                 return new RegisterResponse($token, $created);
             }
             throw new Exception("return model is not instance of user");

@@ -2,8 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\User;
-use App\Services\Star\IStarService;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -17,8 +15,7 @@ class InitUserStarJob implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        private User $user,
-        private IStarService $starService,
+        private int $userId,
     ) {}
 
     /**
@@ -33,21 +30,21 @@ class InitUserStarJob implements ShouldQueue
         }
 
         try {
-            $success = $this->starService->addStarByUserId(
+            $success = app(\App\Services\Star\IStarService::class)->addStarByUserId(
                 $amount,
-                $this->user->id,
+                $this->userId,
                 __('Bạn được tặng sao khi đăng ký tài khoản')
             );
 
             if ($success) {
                 Log::info('Initialized user stars on registration.', [
-                    'user_id' => $this->user->id,
+                    'user_id' => $this->userId,
                     'amount' => $amount,
                 ]);
             }
         } catch (Exception $e) {
             Log::error('Failed to initialize user stars on registration.', [
-                'user_id' => $this->user->id,
+                'user_id' => $this->userId,
                 'amount' => $amount,
                 'error' => $e->getMessage(),
             ]);

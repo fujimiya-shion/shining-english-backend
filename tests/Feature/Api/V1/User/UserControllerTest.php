@@ -4,7 +4,6 @@ use App\Models\User;
 use App\Services\User\IUserService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery;
 
 uses(RefreshDatabase::class);
 
