@@ -7,8 +7,11 @@ use App\Models\Lesson;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizQuestion;
+use App\Models\Star;
+use App\Models\StarTransaction;
 use App\Models\User;
 use App\Models\UserQuizAttempt;
+use App\Enums\StarTransactionType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 if (! extension_loaded('pdo')) {
@@ -148,6 +151,40 @@ it('casts user quiz attempt attributes correctly', function (): void {
     expect($attempt->score_percent)->toBeFloat();
     expect($attempt->passed)->toBeBool();
     expect($attempt->submitted_at)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+});
+
+it('casts star transaction type and links star models to users', function (): void {
+    $city = City::query()->create([
+        'name' => 'Hai Phong',
+        'sort_order' => 4,
+    ]);
+
+    $user = User::query()->create([
+        'name' => 'Star User',
+        'email' => 'star@example.com',
+        'phone' => '0111222333',
+        'city_id' => $city->id,
+        'password' => 'secret123',
+    ]);
+
+    $star = Star::query()->create([
+        'user_id' => $user->id,
+        'amount' => '10',
+    ])->refresh();
+
+    $transaction = StarTransaction::query()->create([
+        'user_id' => $user->id,
+        'amount' => '5',
+        'type' => StarTransactionType::Increase,
+        'description' => 'Initial reward',
+    ])->refresh();
+
+    expect($star->amount)->toBeInt();
+    expect($star->user->is($user))->toBeTrue();
+    expect($transaction->amount)->toBeInt();
+    expect($transaction->type)->toBeInstanceOf(StarTransactionType::class);
+    expect($transaction->type)->toBe(StarTransactionType::Increase);
+    expect($transaction->user->is($user))->toBeTrue();
 });
 
 it('supports soft delete on models using soft deletes', function (): void {

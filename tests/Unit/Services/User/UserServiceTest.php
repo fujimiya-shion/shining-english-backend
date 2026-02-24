@@ -30,11 +30,13 @@ it('implements shared service contract', function (): void {
 });
 
 it('registers user and returns token', function (): void {
-    $user = Mockery::mock(User::class);
-    $user->shouldReceive('createToken')
-        ->once()
-        ->with('user_auth_token')
-        ->andReturn((object) ['plainTextToken' => 'token-123']);
+    $user = new class extends User {
+        public function createToken(string $name, array $abilities = ['*'], ?\DateTimeInterface $expiresAt = null): object
+        {
+            return (object) ['plainTextToken' => 'token-123'];
+        }
+    };
+    $user->id = 1;
 
     $userRepository = Mockery::mock(IUserRepository::class);
     $userRepository->shouldReceive('create')

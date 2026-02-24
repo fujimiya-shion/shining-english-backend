@@ -3,6 +3,7 @@ namespace App\Services\User;
 
 use App\DTO\User\Auth\LoginResponse;
 use App\DTO\User\Auth\RegisterResponse;
+use App\Jobs\InitUserStarJob;
 use App\Models\User;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
@@ -35,6 +36,9 @@ class UserService extends Service implements IUserService {
 
             if($created instanceof User) {
                 $token = $created->createToken('user_auth_token')->plainTextToken;
+                if ($created->id !== null) {
+                    dispatch(new InitUserStarJob($created->id));
+                }
                 return new RegisterResponse($token, $created);
             }
             throw new Exception("return model is not instance of user");
