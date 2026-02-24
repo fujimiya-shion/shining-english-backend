@@ -11,4 +11,13 @@ class StarRepository extends Repository implements IStarRepository
     {
         parent::__construct($model);
     }
+
+    public function findForUpdateByUserId(int $userId): ?Star
+    {
+        return $this->model
+            ->newQuery()
+            ->where('user_id', $userId)
+            ->lockForUpdate()
+            ->first();
+    }
 }
