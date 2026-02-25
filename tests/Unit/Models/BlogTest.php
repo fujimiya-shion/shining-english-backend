@@ -5,6 +5,7 @@ use App\Models\BlogTag;
 use App\Models\BlogUnlock;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -36,6 +37,13 @@ it('defines tag relation', function (): void {
 
     expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
     expect((new Blog)->tag())->toBeInstanceOf(BelongsTo::class);
+});
+
+it('defines unlocks relation', function (): void {
+    $method = new ReflectionMethod(Blog::class, 'unlocks');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Blog)->unlocks())->toBeInstanceOf(HasMany::class);
 });
 
 it('uses soft deletes', function (): void {
