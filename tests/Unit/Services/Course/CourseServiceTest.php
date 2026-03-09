@@ -45,3 +45,23 @@ it('filters courses via repository', function (): void {
 
     expect($result)->toBe($paginator);
 });
+
+it('gets filter props via repository', function (): void {
+    $expected = [
+        'categories' => [
+            ['id' => 1, 'name' => 'Grammar'],
+        ],
+        'price_range' => ['min' => 100, 'max' => 500],
+    ];
+
+    $repository = Mockery::mock(ICourseRepository::class);
+    $repository->shouldReceive('getFilterProps')
+        ->once()
+        ->andReturn($expected);
+
+    $service = new CourseService($repository);
+
+    $result = $service->getFilterProps();
+
+    expect($result)->toBe($expected);
+});
