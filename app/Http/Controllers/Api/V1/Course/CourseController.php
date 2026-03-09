@@ -7,8 +7,8 @@ use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
 use App\Services\Course\ICourseService;
 use App\Services\IService;
 use App\Traits\ApiBehaviour;
-use App\ValueObjects\MetaPagination;
 use App\ValueObjects\CourseFilter;
+use App\ValueObjects\MetaPagination;
 use Illuminate\Http\JsonResponse;
 
 class CourseController extends ApiController
@@ -24,7 +24,8 @@ class CourseController extends ApiController
         return $this->service;
     }
 
-    public function filter(CourseFilterRequest $request): JsonResponse {
+    public function filter(CourseFilterRequest $request): JsonResponse
+    {
         $filters = CourseFilter::fromArray($request->validated());
         $paginator = $this->service->filter($filters);
         $collections = $paginator->getCollection();
@@ -34,5 +35,10 @@ class CourseController extends ApiController
             data: $collections,
             meta: $meta->toArray(),
         );
+    }
+
+    public function getFilterProps(): JsonResponse
+    {
+        return $this->success(data: $this->service->getFilterProps());
     }
 }
