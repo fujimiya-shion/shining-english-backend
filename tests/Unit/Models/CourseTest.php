@@ -14,6 +14,7 @@ it('defines fillable attributes', function (): void {
         'status',
         'thumbnail',
         'category_id',
+        'level_id',
         'description',
         'rating',
         'learned',
@@ -32,6 +33,13 @@ it('defines lessons relation', function (): void {
 
     expect($method->getReturnType()?->getName())->toBe(HasMany::class);
     expect((new Course)->lessons())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines level relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'level');
+
+    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect((new Course)->level())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('defines enrollments relation', function (): void {

@@ -2,6 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Level;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -10,12 +11,15 @@ use Tests\TestCase;
 uses(TestCase::class);
 uses(DatabaseMigrations::class);
 
-it('filters courses by category status ranges and keyword', function (): void {
+it('filters courses by category level ranges and keyword', function (): void {
     $categoryA = Category::factory()->create();
     $categoryB = Category::factory()->create();
+    $levelA = Level::factory()->create(['name' => 'Beginner']);
+    $levelB = Level::factory()->create(['name' => 'Advanced']);
 
     Course::factory()->create([
         'category_id' => $categoryA->id,
+        'level_id' => $levelA->id,
         'name' => 'Basic English',
         'price' => 200,
         'status' => true,
@@ -25,6 +29,7 @@ it('filters courses by category status ranges and keyword', function (): void {
 
     Course::factory()->create([
         'category_id' => $categoryA->id,
+        'level_id' => $levelB->id,
         'name' => 'Advanced English',
         'price' => 600,
         'status' => true,
@@ -34,6 +39,7 @@ it('filters courses by category status ranges and keyword', function (): void {
 
     Course::factory()->create([
         'category_id' => $categoryB->id,
+        'level_id' => $levelA->id,
         'name' => 'Basic Japanese',
         'price' => 200,
         'status' => false,
@@ -45,7 +51,7 @@ it('filters courses by category status ranges and keyword', function (): void {
 
     $filters = CourseFilter::fromArray([
         'category_id' => $categoryA->id,
-        'status' => true,
+        'level_id' => $levelA->id,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 4.0,
@@ -65,9 +71,11 @@ it('filters courses by category status ranges and keyword', function (): void {
 
 it('filters courses with min only conditions', function (): void {
     $category = Category::factory()->create();
+    $level = Level::factory()->create();
 
     Course::factory()->create([
         'category_id' => $category->id,
+        'level_id' => $level->id,
         'name' => 'Math 101',
         'price' => 100,
         'status' => true,
@@ -77,6 +85,7 @@ it('filters courses with min only conditions', function (): void {
 
     Course::factory()->create([
         'category_id' => $category->id,
+        'level_id' => $level->id,
         'name' => 'Math 201',
         'price' => 300,
         'status' => true,
@@ -100,9 +109,11 @@ it('filters courses with min only conditions', function (): void {
 
 it('filters courses with max only conditions', function (): void {
     $category = Category::factory()->create();
+    $level = Level::factory()->create();
 
     Course::factory()->create([
         'category_id' => $category->id,
+        'level_id' => $level->id,
         'name' => 'Science 101',
         'price' => 100,
         'status' => true,
@@ -112,6 +123,7 @@ it('filters courses with max only conditions', function (): void {
 
     Course::factory()->create([
         'category_id' => $category->id,
+        'level_id' => $level->id,
         'name' => 'Science 201',
         'price' => 300,
         'status' => true,
@@ -135,9 +147,11 @@ it('filters courses with max only conditions', function (): void {
 
 it('matches keyword in the middle of course name', function (): void {
     $category = Category::factory()->create();
+    $level = Level::factory()->create();
 
     Course::factory()->create([
         'category_id' => $category->id,
+        'level_id' => $level->id,
         'name' => 'Basic English',
         'price' => 100,
         'status' => true,
@@ -167,9 +181,13 @@ it('builds filter props from existing courses', function (): void {
         'slug' => 'speaking-fluency',
     ]);
     $unusedCategory = Category::factory()->create();
+    $levelA = Level::factory()->create(['name' => 'Beginner']);
+    $levelB = Level::factory()->create(['name' => 'Advanced']);
+    $unusedLevel = Level::factory()->create(['name' => 'Unused']);
 
     Course::factory()->create([
         'category_id' => $categoryA->id,
+        'level_id' => $levelA->id,
         'name' => 'Course A',
         'price' => 100,
         'status' => true,
@@ -178,6 +196,7 @@ it('builds filter props from existing courses', function (): void {
     ]);
     Course::factory()->create([
         'category_id' => $categoryB->id,
+        'level_id' => $levelB->id,
         'name' => 'Course B',
         'price' => 400,
         'status' => false,
@@ -186,6 +205,7 @@ it('builds filter props from existing courses', function (): void {
     ]);
     Course::factory()->create([
         'category_id' => $categoryA->id,
+        'level_id' => $levelA->id,
         'name' => 'Course C',
         'price' => 250,
         'status' => true,
@@ -197,14 +217,17 @@ it('builds filter props from existing courses', function (): void {
 
     $props = $repository->getFilterProps();
 
-    expect($props['price'])->toBe(['min' => 100, 'max' => 400]);
+    expect($props['price'])->toBe(['min' => 100, 'max' => 250]);
     expect($props['rating']['min'])->toBe(2.5);
-    expect($props['rating']['max'])->toBe(4.5);
-    expect($props['learned'])->toBe(['min' => 5, 'max' => 20]);
-    expect($props['statuses'])->toBe([
-        ['value' => true, 'label' => 'Active', 'count' => 2],
-        ['value' => false, 'label' => 'Inactive', 'count' => 1],
+    expect($props['rating']['max'])->toBe(3.8);
+    expect($props['learned'])->toBe(['min' => 5, 'max' => 12]);
+    expect($props['levels'])->toContain([
+        'value' => $levelA->id,
+        'label' => 'Beginner',
+        'count' => 2,
     ]);
+    expect(collect($props['levels'])->pluck('value')->all())->not()->toContain($levelB->id);
+    expect(collect($props['levels'])->pluck('value')->all())->not()->toContain($unusedLevel->id);
 
     expect($props['categories'])->toContain([
         'id' => $categoryA->id,
@@ -212,11 +235,6 @@ it('builds filter props from existing courses', function (): void {
         'slug' => 'grammar-basics',
         'course_count' => 2,
     ]);
-    expect($props['categories'])->toContain([
-        'id' => $categoryB->id,
-        'name' => 'Speaking Fluency',
-        'slug' => 'speaking-fluency',
-        'course_count' => 1,
-    ]);
+    expect(collect($props['categories'])->pluck('id')->all())->not()->toContain($categoryB->id);
     expect(collect($props['categories'])->pluck('id')->all())->not()->toContain($unusedCategory->id);
 });

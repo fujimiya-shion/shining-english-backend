@@ -4,6 +4,7 @@ namespace App\Repositories\Course;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Level;
 use App\Repositories\Repository;
 use App\ValueObjects\CourseFilter;
 use App\ValueObjects\QueryOption;
@@ -18,14 +19,14 @@ class CourseRepository extends Repository implements ICourseRepository
 
     public function filter(CourseFilter $filters): LengthAwarePaginator
     {
-        $query = $this->model->newQuery();
+        $query = $this->model->newQuery()->active();
 
         if ($filters->categoryId !== null) {
             $query->where('category_id', $filters->categoryId);
         }
 
-        if ($filters->status !== null) {
-            $query->where('status', $filters->status);
+        if ($filters->levelId !== null) {
+            $query->where('level_id', $filters->levelId);
         }
 
         if ($filters->priceMin !== null && $filters->priceMax !== null) {
@@ -65,8 +66,10 @@ class CourseRepository extends Repository implements ICourseRepository
     public function getFilterProps(): array
     {
         $categories = Category::query()
-            ->whereHas('courses')
-            ->withCount('courses')
+            ->whereHas('courses', fn ($query) => $query->active())
+            ->withCount([
+                'courses as courses_count' => fn ($query) => $query->active(),
+            ])
             ->orderBy('name')
             ->get(['id', 'name', 'slug'])
             ->map(fn (Category $category): array => [
@@ -79,6 +82,7 @@ class CourseRepository extends Repository implements ICourseRepository
             ->all();
 
         $range = $this->model->newQuery()
+            ->active()
             ->selectRaw('MIN(price) as price_min')
             ->selectRaw('MAX(price) as price_max')
             ->selectRaw('MIN(rating) as rating_min')
@@ -87,14 +91,19 @@ class CourseRepository extends Repository implements ICourseRepository
             ->selectRaw('MAX(learned) as learned_max')
             ->first();
 
-        $statusRows = $this->model->newQuery()
-            ->select('status')
-            ->selectRaw('COUNT(*) as total')
-            ->groupBy('status')
-            ->get();
-
-        $statusCountByValue = $statusRows
-            ->mapWithKeys(fn (Course $course): array => [(int) $course->status => (int) $course->total])
+        $levels = Level::query()
+            ->whereHas('courses', fn ($query) => $query->active())
+            ->withCount([
+                'courses as courses_count' => fn ($query) => $query->active(),
+            ])
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Level $level): array => [
+                'value' => $level->id,
+                'label' => $level->name,
+                'count' => $level->courses_count ?? 0,
+            ])
+            ->values()
             ->all();
 
         return [
@@ -111,18 +120,7 @@ class CourseRepository extends Repository implements ICourseRepository
                 'min' => $range?->learned_min !== null ? (int) $range->learned_min : null,
                 'max' => $range?->learned_max !== null ? (int) $range->learned_max : null,
             ],
-            'statuses' => [
-                [
-                    'value' => true,
-                    'label' => 'Active',
-                    'count' => $statusCountByValue[1] ?? 0,
-                ],
-                [
-                    'value' => false,
-                    'label' => 'Inactive',
-                    'count' => $statusCountByValue[0] ?? 0,
-                ],
-            ],
+            'levels' => $levels,
         ];
     }
 }
