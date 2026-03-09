@@ -116,3 +116,37 @@ it('filters courses with supported criteria', function (): void {
         ],
     ]);
 });
+
+it('returns filter props from service', function (): void {
+    $payload = [
+        'categories' => [
+            [
+                'id' => 1,
+                'name' => 'Grammar Basics',
+                'slug' => 'grammar-basics',
+                'course_count' => 10,
+            ],
+        ],
+        'price' => ['min' => 100, 'max' => 500],
+        'rating' => ['min' => 1.0, 'max' => 5.0],
+        'learned' => ['min' => 0, 'max' => 100],
+        'statuses' => [
+            ['value' => true, 'label' => 'Active', 'count' => 10],
+            ['value' => false, 'label' => 'Inactive', 'count' => 0],
+        ],
+    ];
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getFilterProps')->once()->andReturn($payload);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $response = $controller->getFilterProps();
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'data' => $payload,
+    ]);
+});

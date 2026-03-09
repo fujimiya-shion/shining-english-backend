@@ -1,13 +1,18 @@
 <?php
+
 namespace App\Repositories\Course;
 
+use App\Models\Category;
 use App\Models\Course;
 use App\Repositories\Repository;
 use App\ValueObjects\CourseFilter;
 use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
-class CourseRepository extends Repository implements ICourseRepository {
-    public function __construct(Course $model) {
+
+class CourseRepository extends Repository implements ICourseRepository
+{
+    public function __construct(Course $model)
+    {
         $this->model = $model;
     }
 
@@ -57,4 +62,67 @@ class CourseRepository extends Repository implements ICourseRepository {
         return $query->paginate(perPage: $options->perPage, page: $options->page);
     }
 
+    public function getFilterProps(): array
+    {
+        $categories = Category::query()
+            ->whereHas('courses')
+            ->withCount('courses')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn (Category $category): array => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'course_count' => $category->courses_count ?? 0,
+            ])
+            ->values()
+            ->all();
+
+        $range = $this->model->newQuery()
+            ->selectRaw('MIN(price) as price_min')
+            ->selectRaw('MAX(price) as price_max')
+            ->selectRaw('MIN(rating) as rating_min')
+            ->selectRaw('MAX(rating) as rating_max')
+            ->selectRaw('MIN(learned) as learned_min')
+            ->selectRaw('MAX(learned) as learned_max')
+            ->first();
+
+        $statusRows = $this->model->newQuery()
+            ->select('status')
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('status')
+            ->get();
+
+        $statusCountByValue = $statusRows
+            ->mapWithKeys(fn (Course $course): array => [(int) $course->status => (int) $course->total])
+            ->all();
+
+        return [
+            'categories' => $categories,
+            'price' => [
+                'min' => $range?->price_min !== null ? (int) $range->price_min : null,
+                'max' => $range?->price_max !== null ? (int) $range->price_max : null,
+            ],
+            'rating' => [
+                'min' => $range?->rating_min !== null ? (float) $range->rating_min : null,
+                'max' => $range?->rating_max !== null ? (float) $range->rating_max : null,
+            ],
+            'learned' => [
+                'min' => $range?->learned_min !== null ? (int) $range->learned_min : null,
+                'max' => $range?->learned_max !== null ? (int) $range->learned_max : null,
+            ],
+            'statuses' => [
+                [
+                    'value' => true,
+                    'label' => 'Active',
+                    'count' => $statusCountByValue[1] ?? 0,
+                ],
+                [
+                    'value' => false,
+                    'label' => 'Inactive',
+                    'count' => $statusCountByValue[0] ?? 0,
+                ],
+            ],
+        ];
+    }
 }
