@@ -22,6 +22,7 @@ test('courses table defines expected columns', function (): void {
         'rating',
         'learned',
         'category.name',
+        'level.name',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -34,9 +35,10 @@ test('courses table registers trashed filter', function (): void {
     $filters = $table->getFilters();
     $filters = array_values($filters);
 
-    expect($filters)->toHaveCount(3);
+    expect($filters)->toHaveCount(4);
     expect(actionClassList($filters))->toEqual([
         TernaryFilter::class,
+        SelectFilter::class,
         SelectFilter::class,
         TrashedFilter::class,
     ]);

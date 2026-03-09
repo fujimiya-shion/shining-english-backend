@@ -74,7 +74,7 @@ it('filters courses with supported criteria', function (): void {
         ->with(
             \Mockery::on(function (CourseFilter $filters): bool {
                 return $filters->categoryId === 2
-                    && $filters->status === false
+                    && $filters->levelId === null
                     && $filters->priceMin === 100
                     && $filters->priceMax === 300
                     && $filters->ratingMin === 3.5
@@ -90,7 +90,6 @@ it('filters courses with supported criteria', function (): void {
     $controller = app()->make(CourseController::class);
     $request = CourseFilterRequest::create('/api/v1/courses/filter', 'GET', [
         'category_id' => 2,
-        'status' => false,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 3.5,
@@ -130,9 +129,9 @@ it('returns filter props from service', function (): void {
         'price' => ['min' => 100, 'max' => 500],
         'rating' => ['min' => 1.0, 'max' => 5.0],
         'learned' => ['min' => 0, 'max' => 100],
-        'statuses' => [
-            ['value' => true, 'label' => 'Active', 'count' => 10],
-            ['value' => false, 'label' => 'Inactive', 'count' => 0],
+        'levels' => [
+            ['value' => 1, 'label' => 'Beginner', 'count' => 6],
+            ['value' => 2, 'label' => 'Intermediate', 'count' => 4],
         ],
     ];
 

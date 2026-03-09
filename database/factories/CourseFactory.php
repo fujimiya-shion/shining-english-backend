@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Level;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -32,6 +33,7 @@ class CourseFactory extends Factory
             'status' => true,
             'thumbnail' => null,
             'category_id' => Category::factory(),
+            'level_id' => Level::factory(),
             'description' => fake()->sentence(),
             'rating' => fake()->randomFloat(1, 1, 5),
             'learned' => fake()->numberBetween(0, 100),

@@ -8,7 +8,7 @@ uses(TestCase::class);
 it('builds course filter from array', function (): void {
     $filters = CourseFilter::fromArray([
         'category_id' => 3,
-        'status' => 'true',
+        'level_id' => 2,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 3.5,
@@ -21,7 +21,7 @@ it('builds course filter from array', function (): void {
     ]);
 
     expect($filters->categoryId)->toBe(3);
-    expect($filters->status)->toBeTrue();
+    expect($filters->levelId)->toBe(2);
     expect($filters->priceMin)->toBe(100);
     expect($filters->priceMax)->toBe(300);
     expect($filters->ratingMin)->toBe(3.5);
@@ -50,13 +50,12 @@ it('falls back to name when q is empty', function (): void {
     expect($filters->keyword)->toBe('english');
 });
 
-it('keeps status null when invalid', function (): void {
+it('keeps level id null when missing', function (): void {
     $filters = CourseFilter::fromArray([
-        'status' => 'invalid',
         'q' => null,
     ]);
 
-    expect($filters->status)->toBeNull();
+    expect($filters->levelId)->toBeNull();
     expect($filters->keyword)->toBeNull();
 });
 

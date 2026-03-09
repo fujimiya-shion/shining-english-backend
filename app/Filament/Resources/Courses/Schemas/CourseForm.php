@@ -40,6 +40,12 @@ class CourseForm
                             ->preload()
                             ->required()
                             ->columnSpan(4),
+                        Select::make('level_id')
+                            ->relationship('level', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->columnSpan(4),
                         TextInput::make('price')
                             ->required()
                             ->numeric()

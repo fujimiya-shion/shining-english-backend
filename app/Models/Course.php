@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\Slugable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +21,7 @@ class Course extends Model
         'status',
         'thumbnail',
         'category_id',
+        'level_id',
         'description',
         'rating',
         'learned',
@@ -30,6 +32,11 @@ class Course extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
+    }
+
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
@@ -38,5 +45,10 @@ class Course extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', true);
     }
 }
