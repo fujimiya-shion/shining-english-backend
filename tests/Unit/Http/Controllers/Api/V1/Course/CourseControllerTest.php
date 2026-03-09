@@ -2,14 +2,17 @@
 
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
+use App\Models\Level;
 use App\Services\Course\ICourseService;
 use App\ValueObjects\CourseFilter;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 uses(TestCase::class);
+uses(DatabaseMigrations::class);
 
 afterEach(function (): void {
     \Mockery::close();
@@ -67,14 +70,16 @@ it('inherits success and error json helpers', function (): void {
 it('filters courses with supported criteria', function (): void {
     $items = new Collection;
     $paginator = new LengthAwarePaginator($items, 0, 15, 1);
+    $level = Level::factory()->create();
 
     $service = \Mockery::mock(ICourseService::class);
     $service->shouldReceive('filter')
         ->once()
         ->with(
-            \Mockery::on(function (CourseFilter $filters): bool {
+            \Mockery::on(function (CourseFilter $filters) use ($level): bool {
                 return $filters->categoryId === 2
                     && $filters->status === false
+                    && $filters->levelId === $level->id
                     && $filters->priceMin === 100
                     && $filters->priceMax === 300
                     && $filters->ratingMin === 3.5
@@ -91,6 +96,7 @@ it('filters courses with supported criteria', function (): void {
     $request = CourseFilterRequest::create('/api/v1/courses/filter', 'GET', [
         'category_id' => 2,
         'status' => false,
+        'level_id' => $level->id,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 3.5,
@@ -133,6 +139,11 @@ it('returns filter props from service', function (): void {
         'statuses' => [
             ['value' => true, 'label' => 'Active', 'count' => 10],
             ['value' => false, 'label' => 'Inactive', 'count' => 0],
+        ],
+        'levels' => [
+            ['value' => 1, 'label' => 'Beginner', 'count' => 5],
+            ['value' => 2, 'label' => 'Intermediate', 'count' => 3],
+            ['value' => 3, 'label' => 'Advanced', 'count' => 2],
         ],
     ];
 

@@ -2,6 +2,7 @@
 
 use App\Models\Course;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 it('defines fillable attributes', function (): void {
@@ -39,6 +40,13 @@ it('defines enrollments relation', function (): void {
 
     expect($method->getReturnType()?->getName())->toBe(HasMany::class);
     expect((new Course)->enrollments())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines levels relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'levels');
+
+    expect($method->getReturnType()?->getName())->toBe(BelongsToMany::class);
+    expect((new Course)->levels())->toBeInstanceOf(BelongsToMany::class);
 });
 
 it('uses soft deletes', function (): void {

@@ -6,7 +6,9 @@ use App\Models\Admin;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Course;
+use App\Models\Level;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
@@ -22,6 +24,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             CitySeeder::class,
             CategorySeeder::class,
+            LevelSeeder::class,
             CourseSeeder::class,
         ]);
     }
@@ -30,6 +33,12 @@ class DatabaseSeeder extends Seeder
     {
         Schema::disableForeignKeyConstraints();
 
+        if (Schema::hasTable('course_level')) {
+            DB::table('course_level')->truncate();
+        }
+        if (Schema::hasTable('levels')) {
+            Level::query()->truncate();
+        }
         Course::query()->truncate();
         Category::query()->truncate();
         City::query()->truncate();

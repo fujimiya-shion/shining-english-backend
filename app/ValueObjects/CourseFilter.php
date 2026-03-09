@@ -7,6 +7,7 @@ class CourseFilter
     public function __construct(
         public ?int $categoryId = null,
         public ?bool $status = null,
+        public ?int $levelId = null,
         public ?int $priceMin = null,
         public ?int $priceMax = null,
         public ?float $ratingMin = null,
@@ -26,6 +27,14 @@ class CourseFilter
             $status = filter_var($raw['status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         }
 
+        $levelId = null;
+        if (array_key_exists('level_id', $raw) && is_numeric($raw['level_id'])) {
+            $levelId = (int) $raw['level_id'];
+            if ($levelId <= 0) {
+                $levelId = null;
+            }
+        }
+
         $keyword = isset($raw['q']) ? trim((string) $raw['q']) : null;
         if ($keyword === '' || $keyword === null) {
             $keyword = isset($raw['name']) ? trim((string) $raw['name']) : null;
@@ -37,6 +46,7 @@ class CourseFilter
         return new self(
             categoryId: isset($raw['category_id']) ? (int) $raw['category_id'] : null,
             status: $status,
+            levelId: $levelId,
             priceMin: isset($raw['price_min']) ? (int) $raw['price_min'] : null,
             priceMax: isset($raw['price_max']) ? (int) $raw['price_max'] : null,
             ratingMin: isset($raw['rating_min']) ? (float) $raw['rating_min'] : null,

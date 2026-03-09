@@ -44,6 +44,10 @@ class CoursesTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('category.name')
                     ->searchable(),
+                TextColumn::make('levels.name')
+                    ->badge()
+                    ->separator(', ')
+                    ->label('Levels'),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
@@ -61,6 +65,11 @@ class CoursesTable
                 TernaryFilter::make('status'),
                 SelectFilter::make('category_id')
                     ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('levels')
+                    ->relationship('levels', 'name')
+                    ->multiple()
                     ->searchable()
                     ->preload(),
                 TrashedFilter::make(),

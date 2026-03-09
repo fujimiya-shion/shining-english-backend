@@ -4,9 +4,11 @@ namespace App\Repositories\Course;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Level;
 use App\Repositories\Repository;
 use App\ValueObjects\CourseFilter;
 use App\ValueObjects\QueryOption;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CourseRepository extends Repository implements ICourseRepository
@@ -16,9 +18,14 @@ class CourseRepository extends Repository implements ICourseRepository
         $this->model = $model;
     }
 
+    protected function getQuery(): Builder
+    {
+        return $this->model->newQuery()->active();
+    }
+
     public function filter(CourseFilter $filters): LengthAwarePaginator
     {
-        $query = $this->model->newQuery();
+        $query = $this->getQuery();
 
         if ($filters->categoryId !== null) {
             $query->where('category_id', $filters->categoryId);
@@ -26,6 +33,12 @@ class CourseRepository extends Repository implements ICourseRepository
 
         if ($filters->status !== null) {
             $query->where('status', $filters->status);
+        }
+
+        if ($filters->levelId !== null) {
+            $query->whereHas('levels', function (Builder $query) use ($filters): void {
+                $query->where('levels.id', $filters->levelId);
+            });
         }
 
         if ($filters->priceMin !== null && $filters->priceMax !== null) {
@@ -65,8 +78,10 @@ class CourseRepository extends Repository implements ICourseRepository
     public function getFilterProps(): array
     {
         $categories = Category::query()
-            ->whereHas('courses')
-            ->withCount('courses')
+            ->whereHas('courses', fn (Builder $query): Builder => $query->active())
+            ->withCount([
+                'courses as courses_count' => fn (Builder $query): Builder => $query->active(),
+            ])
             ->orderBy('name')
             ->get(['id', 'name', 'slug'])
             ->map(fn (Category $category): array => [
@@ -78,7 +93,7 @@ class CourseRepository extends Repository implements ICourseRepository
             ->values()
             ->all();
 
-        $range = $this->model->newQuery()
+        $range = $this->getQuery()
             ->selectRaw('MIN(price) as price_min')
             ->selectRaw('MAX(price) as price_max')
             ->selectRaw('MIN(rating) as rating_min')
@@ -87,7 +102,7 @@ class CourseRepository extends Repository implements ICourseRepository
             ->selectRaw('MAX(learned) as learned_max')
             ->first();
 
-        $statusRows = $this->model->newQuery()
+        $statusRows = $this->getQuery()
             ->select('status')
             ->selectRaw('COUNT(*) as total')
             ->groupBy('status')
@@ -96,6 +111,14 @@ class CourseRepository extends Repository implements ICourseRepository
         $statusCountByValue = $statusRows
             ->mapWithKeys(fn (Course $course): array => [(int) $course->status => (int) $course->total])
             ->all();
+
+        $levels = Level::query()
+            ->whereHas('courses', fn (Builder $query): Builder => $query->active())
+            ->withCount([
+                'courses as courses_count' => fn (Builder $query): Builder => $query->active(),
+            ])
+            ->orderBy('name')
+            ->get();
 
         return [
             'categories' => $categories,
@@ -117,11 +140,16 @@ class CourseRepository extends Repository implements ICourseRepository
                     'label' => 'Active',
                     'count' => $statusCountByValue[1] ?? 0,
                 ],
-                [
-                    'value' => false,
-                    'label' => 'Inactive',
-                    'count' => $statusCountByValue[0] ?? 0,
-                ],
+            ],
+            'levels' => [
+                ...$levels
+                    ->map(fn (Level $level): array => [
+                        'value' => $level->id,
+                        'label' => $level->name,
+                        'count' => $level->courses_count ?? 0,
+                    ])
+                    ->values()
+                    ->all(),
             ],
         ];
     }

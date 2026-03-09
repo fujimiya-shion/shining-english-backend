@@ -19,6 +19,7 @@ class CourseFilterRequest extends FormRequest
         return [
             'category_id' => ['nullable', 'integer'],
             'status' => ['nullable', 'boolean'],
+            'level_id' => ['nullable', 'integer', 'exists:levels,id'],
             'price_min' => ['nullable', 'integer', 'min:0'],
             'price_max' => ['nullable', 'integer', 'min:0'],
             'rating_min' => ['nullable', 'numeric', 'min:0', 'max:5'],
@@ -40,6 +41,8 @@ class CourseFilterRequest extends FormRequest
         return [
             'category_id.integer' => 'Category id must be an integer.',
             'status.boolean' => 'Status must be a boolean.',
+            'level_id.integer' => 'Level id must be an integer.',
+            'level_id.exists' => 'Selected level does not exist.',
             'price_min.integer' => 'Minimum price must be an integer.',
             'price_max.integer' => 'Maximum price must be an integer.',
             'rating_min.numeric' => 'Minimum rating must be a number.',

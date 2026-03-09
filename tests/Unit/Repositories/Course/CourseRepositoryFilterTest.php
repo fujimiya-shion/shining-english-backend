@@ -2,6 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Level;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -13,8 +14,10 @@ uses(DatabaseMigrations::class);
 it('filters courses by category status ranges and keyword', function (): void {
     $categoryA = Category::factory()->create();
     $categoryB = Category::factory()->create();
+    $beginner = Level::factory()->create(['name' => 'Beginner', 'slug' => 'beginner']);
+    $advanced = Level::factory()->create(['name' => 'Advanced', 'slug' => 'advanced']);
 
-    Course::factory()->create([
+    $courseA = Course::factory()->create([
         'category_id' => $categoryA->id,
         'name' => 'Basic English',
         'price' => 200,
@@ -22,8 +25,9 @@ it('filters courses by category status ranges and keyword', function (): void {
         'rating' => 4.5,
         'learned' => 15,
     ]);
+    $courseA->levels()->sync([$beginner->id]);
 
-    Course::factory()->create([
+    $courseB = Course::factory()->create([
         'category_id' => $categoryA->id,
         'name' => 'Advanced English',
         'price' => 600,
@@ -31,8 +35,9 @@ it('filters courses by category status ranges and keyword', function (): void {
         'rating' => 4.9,
         'learned' => 30,
     ]);
+    $courseB->levels()->sync([$advanced->id]);
 
-    Course::factory()->create([
+    $courseC = Course::factory()->create([
         'category_id' => $categoryB->id,
         'name' => 'Basic Japanese',
         'price' => 200,
@@ -40,12 +45,13 @@ it('filters courses by category status ranges and keyword', function (): void {
         'rating' => 3.2,
         'learned' => 12,
     ]);
+    $courseC->levels()->sync([$beginner->id]);
 
     $repository = new CourseRepository(new Course);
 
     $filters = CourseFilter::fromArray([
         'category_id' => $categoryA->id,
-        'status' => true,
+        'level_id' => $beginner->id,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 4.0,
@@ -65,8 +71,10 @@ it('filters courses by category status ranges and keyword', function (): void {
 
 it('filters courses with min only conditions', function (): void {
     $category = Category::factory()->create();
+    $beginner = Level::factory()->create(['name' => 'Beginner', 'slug' => 'beginner']);
+    $intermediate = Level::factory()->create(['name' => 'Intermediate', 'slug' => 'intermediate']);
 
-    Course::factory()->create([
+    $courseA = Course::factory()->create([
         'category_id' => $category->id,
         'name' => 'Math 101',
         'price' => 100,
@@ -74,8 +82,9 @@ it('filters courses with min only conditions', function (): void {
         'rating' => 2.5,
         'learned' => 5,
     ]);
+    $courseA->levels()->sync([$beginner->id]);
 
-    Course::factory()->create([
+    $courseB = Course::factory()->create([
         'category_id' => $category->id,
         'name' => 'Math 201',
         'price' => 300,
@@ -83,6 +92,7 @@ it('filters courses with min only conditions', function (): void {
         'rating' => 4.2,
         'learned' => 25,
     ]);
+    $courseB->levels()->sync([$intermediate->id]);
 
     $repository = new CourseRepository(new Course);
 
@@ -100,8 +110,10 @@ it('filters courses with min only conditions', function (): void {
 
 it('filters courses with max only conditions', function (): void {
     $category = Category::factory()->create();
+    $beginner = Level::factory()->create(['name' => 'Beginner', 'slug' => 'beginner']);
+    $advanced = Level::factory()->create(['name' => 'Advanced', 'slug' => 'advanced']);
 
-    Course::factory()->create([
+    $courseA = Course::factory()->create([
         'category_id' => $category->id,
         'name' => 'Science 101',
         'price' => 100,
@@ -109,8 +121,9 @@ it('filters courses with max only conditions', function (): void {
         'rating' => 2.0,
         'learned' => 5,
     ]);
+    $courseA->levels()->sync([$beginner->id]);
 
-    Course::factory()->create([
+    $courseB = Course::factory()->create([
         'category_id' => $category->id,
         'name' => 'Science 201',
         'price' => 300,
@@ -118,6 +131,7 @@ it('filters courses with max only conditions', function (): void {
         'rating' => 4.5,
         'learned' => 25,
     ]);
+    $courseB->levels()->sync([$advanced->id]);
 
     $repository = new CourseRepository(new Course);
 
@@ -135,8 +149,9 @@ it('filters courses with max only conditions', function (): void {
 
 it('matches keyword in the middle of course name', function (): void {
     $category = Category::factory()->create();
+    $beginner = Level::factory()->create(['name' => 'Beginner', 'slug' => 'beginner']);
 
-    Course::factory()->create([
+    $course = Course::factory()->create([
         'category_id' => $category->id,
         'name' => 'Basic English',
         'price' => 100,
@@ -144,6 +159,7 @@ it('matches keyword in the middle of course name', function (): void {
         'rating' => 4.0,
         'learned' => 10,
     ]);
+    $course->levels()->sync([$beginner->id]);
 
     $repository = new CourseRepository(new Course);
 
@@ -157,6 +173,32 @@ it('matches keyword in the middle of course name', function (): void {
     expect($result->items()[0]->name)->toBe('Basic English');
 });
 
+it('applies explicit status filter after active scope', function (): void {
+    $category = Category::factory()->create();
+    $level = Level::factory()->create();
+
+    $activeCourse = Course::factory()->create([
+        'category_id' => $category->id,
+        'status' => true,
+    ]);
+    $activeCourse->levels()->sync([$level->id]);
+
+    $inactiveCourse = Course::factory()->create([
+        'category_id' => $category->id,
+        'status' => false,
+    ]);
+    $inactiveCourse->levels()->sync([$level->id]);
+
+    $repository = new CourseRepository(new Course);
+    $filters = CourseFilter::fromArray([
+        'status' => false,
+    ]);
+
+    $result = $repository->filter($filters);
+
+    expect($result->total())->toBe(0);
+});
+
 it('builds filter props from existing courses', function (): void {
     $categoryA = Category::factory()->create([
         'name' => 'Grammar Basics',
@@ -167,8 +209,11 @@ it('builds filter props from existing courses', function (): void {
         'slug' => 'speaking-fluency',
     ]);
     $unusedCategory = Category::factory()->create();
+    $beginner = Level::factory()->create(['name' => 'Beginner', 'slug' => 'beginner']);
+    $intermediate = Level::factory()->create(['name' => 'Intermediate', 'slug' => 'intermediate']);
+    $advanced = Level::factory()->create(['name' => 'Advanced', 'slug' => 'advanced']);
 
-    Course::factory()->create([
+    $courseA = Course::factory()->create([
         'category_id' => $categoryA->id,
         'name' => 'Course A',
         'price' => 100,
@@ -176,15 +221,19 @@ it('builds filter props from existing courses', function (): void {
         'rating' => 2.5,
         'learned' => 5,
     ]);
-    Course::factory()->create([
+    $courseA->levels()->sync([$beginner->id]);
+
+    $courseB = Course::factory()->create([
         'category_id' => $categoryB->id,
         'name' => 'Course B',
         'price' => 400,
-        'status' => false,
+        'status' => true,
         'rating' => 4.5,
         'learned' => 20,
     ]);
-    Course::factory()->create([
+    $courseB->levels()->sync([$advanced->id]);
+
+    $courseC = Course::factory()->create([
         'category_id' => $categoryA->id,
         'name' => 'Course C',
         'price' => 250,
@@ -192,6 +241,17 @@ it('builds filter props from existing courses', function (): void {
         'rating' => 3.8,
         'learned' => 12,
     ]);
+    $courseC->levels()->sync([$intermediate->id]);
+
+    $inactiveCourse = Course::factory()->create([
+        'category_id' => $categoryB->id,
+        'name' => 'Inactive Course',
+        'price' => 999,
+        'status' => false,
+        'rating' => 5.0,
+        'learned' => 99,
+    ]);
+    $inactiveCourse->levels()->sync([$advanced->id]);
 
     $repository = new CourseRepository(new Course);
 
@@ -202,8 +262,12 @@ it('builds filter props from existing courses', function (): void {
     expect($props['rating']['max'])->toBe(4.5);
     expect($props['learned'])->toBe(['min' => 5, 'max' => 20]);
     expect($props['statuses'])->toBe([
-        ['value' => true, 'label' => 'Active', 'count' => 2],
-        ['value' => false, 'label' => 'Inactive', 'count' => 1],
+        ['value' => true, 'label' => 'Active', 'count' => 3],
+    ]);
+    expect($props['levels'])->toBe([
+        ['value' => $advanced->id, 'label' => 'Advanced', 'count' => 1],
+        ['value' => $beginner->id, 'label' => 'Beginner', 'count' => 1],
+        ['value' => $intermediate->id, 'label' => 'Intermediate', 'count' => 1],
     ]);
 
     expect($props['categories'])->toContain([

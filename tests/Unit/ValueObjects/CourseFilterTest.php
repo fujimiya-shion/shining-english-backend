@@ -9,6 +9,7 @@ it('builds course filter from array', function (): void {
     $filters = CourseFilter::fromArray([
         'category_id' => 3,
         'status' => 'true',
+        'level_id' => 2,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 3.5,
@@ -22,6 +23,7 @@ it('builds course filter from array', function (): void {
 
     expect($filters->categoryId)->toBe(3);
     expect($filters->status)->toBeTrue();
+    expect($filters->levelId)->toBe(2);
     expect($filters->priceMin)->toBe(100);
     expect($filters->priceMax)->toBe(300);
     expect($filters->ratingMin)->toBe(3.5);
@@ -53,11 +55,21 @@ it('falls back to name when q is empty', function (): void {
 it('keeps status null when invalid', function (): void {
     $filters = CourseFilter::fromArray([
         'status' => 'invalid',
+        'level_id' => 'invalid',
         'q' => null,
     ]);
 
     expect($filters->status)->toBeNull();
+    expect($filters->levelId)->toBeNull();
     expect($filters->keyword)->toBeNull();
+});
+
+it('normalizes non-positive level id to null', function (): void {
+    $filters = CourseFilter::fromArray([
+        'level_id' => 0,
+    ]);
+
+    expect($filters->levelId)->toBeNull();
 });
 
 it('sets keyword null when name is empty and q missing', function (): void {
