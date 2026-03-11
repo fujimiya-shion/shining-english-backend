@@ -6,8 +6,16 @@ class PhpUploadLimit
 {
     public static function maxKilobytes(): int
     {
-        $uploadBytes = self::toBytes(ini_get('upload_max_filesize'));
-        $postBytes = self::toBytes(ini_get('post_max_size'));
+        return self::maxKilobytesFromIniValues(
+            ini_get('upload_max_filesize'),
+            ini_get('post_max_size'),
+        );
+    }
+
+    public static function maxKilobytesFromIniValues(string|false $uploadMaxFileSize, string|false $postMaxSize): int
+    {
+        $uploadBytes = self::toBytes($uploadMaxFileSize);
+        $postBytes = self::toBytes($postMaxSize);
 
         $limitBytes = min(
             $uploadBytes > 0 ? $uploadBytes : PHP_INT_MAX,

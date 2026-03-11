@@ -27,8 +27,7 @@ class VideoMetadataReader
         }
 
         try {
-            $analyzer = new \getID3;
-            $info = $analyzer->analyze($absolutePath);
+            $info = $this->analyzeFile($absolutePath);
             $seconds = $info['playtime_seconds'] ?? null;
 
             if (! is_numeric($seconds) || (float) $seconds <= 0) {
@@ -39,5 +38,15 @@ class VideoMetadataReader
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function analyzeFile(string $absolutePath): array
+    {
+        $analyzer = new \getID3;
+
+        return $analyzer->analyze($absolutePath);
     }
 }

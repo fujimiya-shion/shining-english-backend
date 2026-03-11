@@ -14,7 +14,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class LessonForm
 {
@@ -68,7 +67,7 @@ class LessonForm
 
                                 $resolvedState = is_array($state) ? reset($state) : $state;
 
-                                if ($resolvedState instanceof TemporaryUploadedFile) {
+                                if (is_object($resolvedState) && method_exists($resolvedState, 'getRealPath')) {
                                     $minutes = $videoMetadataReader
                                         ->detectDurationMinutesFromAbsolutePath($resolvedState->getRealPath());
                                 } elseif (is_string($resolvedState)) {
