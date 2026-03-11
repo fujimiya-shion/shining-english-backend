@@ -27,7 +27,8 @@ class CourseRepository extends Repository implements ICourseRepository
                 'category:id,name,slug',
                 'level:id,name',
                 'reviews' => fn ($query) => $query
-                    ->select(['id', 'course_id', 'name', 'rating', 'content', 'created_at'])
+                    ->select(['id', 'course_id', 'user_id', 'rating', 'content', 'created_at'])
+                    ->with(['user:id,name,avatar'])
                     ->orderByDesc('created_at'),
                 'lessons' => fn ($query) => $query
                     ->select([
@@ -45,7 +46,8 @@ class CourseRepository extends Repository implements ICourseRepository
                     ])
                     ->with([
                         'comments' => fn ($commentQuery) => $commentQuery
-                            ->select(['id', 'lesson_id', 'name', 'content', 'created_at'])
+                            ->select(['id', 'lesson_id', 'user_id', 'content', 'created_at'])
+                            ->with(['user:id,name,avatar'])
                             ->orderByDesc('created_at'),
                     ])
                     ->orderBy('group_name')

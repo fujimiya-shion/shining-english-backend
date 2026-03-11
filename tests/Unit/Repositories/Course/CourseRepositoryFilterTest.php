@@ -6,6 +6,7 @@ use App\Models\CourseReview;
 use App\Models\Level;
 use App\Models\Lesson;
 use App\Models\LessonComment;
+use App\Models\User;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -280,16 +281,19 @@ it('loads reviews and lesson comments when getting course by slug', function ():
         'has_quiz' => false,
     ]);
 
+    $reviewUser = User::factory()->create(['name' => 'Ha Linh']);
+    $commentUser = User::factory()->create(['name' => 'Ngoc Anh']);
+
     CourseReview::query()->create([
         'course_id' => $course->id,
-        'name' => 'Ha Linh',
+        'user_id' => $reviewUser->id,
         'rating' => 5,
         'content' => 'Rất tốt',
     ]);
 
     LessonComment::query()->create([
         'lesson_id' => $lesson->id,
-        'name' => 'Ngoc Anh',
+        'user_id' => $commentUser->id,
         'content' => 'Có bài tập không ạ?',
     ]);
 
@@ -299,7 +303,11 @@ it('loads reviews and lesson comments when getting course by slug', function ():
     expect($result)->not()->toBeNull();
     expect($result?->relationLoaded('reviews'))->toBeTrue();
     expect($result?->reviews->count())->toBe(1);
+    expect($result?->reviews->first()?->relationLoaded('user'))->toBeTrue();
+    expect($result?->reviews->first()?->user?->name)->toBe('Ha Linh');
     expect($result?->relationLoaded('lessons'))->toBeTrue();
     expect($result?->lessons->first()?->relationLoaded('comments'))->toBeTrue();
     expect($result?->lessons->first()?->comments->count())->toBe(1);
+    expect($result?->lessons->first()?->comments->first()?->relationLoaded('user'))->toBeTrue();
+    expect($result?->lessons->first()?->comments->first()?->user?->name)->toBe('Ngoc Anh');
 });

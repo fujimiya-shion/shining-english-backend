@@ -14,15 +14,19 @@ return new class extends Migration
         Schema::create('course_reviews', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('course_id');
-            $table->string('name');
+            $table->unsignedBigInteger('user_id');
             $table->unsignedTinyInteger('rating');
             $table->text('content');
             $table->softDeletes();
             $table->timestamps();
 
             $table->index('course_id');
+            $table->index('user_id');
             $table->index('rating');
             $table->index('deleted_at');
+
+            $table->foreign('course_id')->references('id')->on('courses')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 

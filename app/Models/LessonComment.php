@@ -13,12 +13,17 @@ class LessonComment extends Model
 
     protected $fillable = [
         'lesson_id',
-        'name',
+        'user_id',
         'content',
     ];
 
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

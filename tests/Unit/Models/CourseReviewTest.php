@@ -8,7 +8,7 @@ it('defines fillable attributes', function (): void {
 
     expect($model->getFillable())->toEqual([
         'course_id',
-        'name',
+        'user_id',
         'rating',
         'content',
     ]);
@@ -25,6 +25,13 @@ it('defines course relation', function (): void {
 
     expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
     expect((new CourseReview)->course())->toBeInstanceOf(BelongsTo::class);
+});
+
+it('defines user relation', function (): void {
+    $method = new ReflectionMethod(CourseReview::class, 'user');
+
+    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect((new CourseReview)->user())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('uses soft deletes', function (): void {

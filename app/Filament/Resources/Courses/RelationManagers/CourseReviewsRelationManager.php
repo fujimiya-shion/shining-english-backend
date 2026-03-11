@@ -7,6 +7,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -28,9 +29,11 @@ class CourseReviewsRelationManager extends RelationManager
                 Grid::make(12)
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('name')
+                        Select::make('user_id')
+                            ->relationship('user', 'name')
                             ->required()
-                            ->maxLength(255)
+                            ->searchable()
+                            ->preload()
                             ->columnSpan(6),
                         TextInput::make('rating')
                             ->numeric()
@@ -50,7 +53,7 @@ class CourseReviewsRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('user.name')
                     ->searchable(),
                 TextColumn::make('rating')
                     ->numeric()

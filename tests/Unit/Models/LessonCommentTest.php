@@ -8,7 +8,7 @@ it('defines fillable attributes', function (): void {
 
     expect($model->getFillable())->toEqual([
         'lesson_id',
-        'name',
+        'user_id',
         'content',
     ]);
 });
@@ -18,6 +18,13 @@ it('defines lesson relation', function (): void {
 
     expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
     expect((new LessonComment)->lesson())->toBeInstanceOf(BelongsTo::class);
+});
+
+it('defines user relation', function (): void {
+    $method = new ReflectionMethod(LessonComment::class, 'user');
+
+    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect((new LessonComment)->user())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('uses soft deletes', function (): void {

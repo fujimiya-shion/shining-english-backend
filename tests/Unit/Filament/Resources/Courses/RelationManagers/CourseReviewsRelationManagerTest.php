@@ -6,6 +6,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\TrashedFilter;
@@ -16,7 +17,7 @@ test('course reviews relation manager defines form components', function (): voi
     $schema = $manager->form(makeSchema());
     $components = schemaComponentMap($schema);
 
-    expect($components['name'])->toBeInstanceOf(TextInput::class);
+    expect($components['user_id'])->toBeInstanceOf(Select::class);
     expect($components['rating'])->toBeInstanceOf(TextInput::class);
     expect($components['content'])->toBeInstanceOf(Textarea::class);
 });
@@ -27,7 +28,7 @@ test('course reviews relation manager defines table configuration', function ():
     $table = $manager->table(makeTable());
 
     expect(tableColumnNames($table))->toEqual([
-        'name',
+        'user.name',
         'rating',
         'content',
         'created_at',

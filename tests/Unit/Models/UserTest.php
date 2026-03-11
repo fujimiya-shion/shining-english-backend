@@ -70,6 +70,18 @@ it('defines blog unlocks relation', function (): void {
     expect($user->blogUnlocks())->toBeInstanceOf(HasMany::class);
 });
 
+it('defines course reviews relation', function (): void {
+    $user = new User;
+
+    expect($user->courseReviews())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines lesson comments relation', function (): void {
+    $user = new User;
+
+    expect($user->lessonComments())->toBeInstanceOf(HasMany::class);
+});
+
 it('hashes password when setting it', function (): void {
     $user = new User;
     $user->password = 'secret';
