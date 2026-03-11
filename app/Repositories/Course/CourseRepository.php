@@ -2,9 +2,9 @@
 
 namespace App\Repositories\Course;
 
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\Level;
+use App\Repositories\Category\ICategoryRepository;
 use App\Repositories\Repository;
 use App\ValueObjects\CourseFilter;
 use App\ValueObjects\QueryOption;
@@ -12,14 +12,32 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CourseRepository extends Repository implements ICourseRepository
 {
-    public function __construct(Course $model)
+    public function __construct(
+        Course $model,
+        protected ICategoryRepository $categoryRepository
+    )
     {
         $this->model = $model;
     }
 
+    public function getBySlug(string $slug): ?Course
+    {
+        return $this->model->newQuery()
+            ->with([
+                'category:id,name,slug',
+                'level:id,name',
+                'lessons' => fn ($query) => $query
+                    ->select(['id', 'name', 'slug', 'course_id', 'video_url', 'has_quiz', 'star_reward_video', 'star_reward_quiz'])
+                    ->orderBy('id'),
+            ])
+            ->where('status', true)
+            ->where('slug', $slug)
+            ->first();
+    }
+
     public function filter(CourseFilter $filters): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()->active();
+        $query = $this->model->newQuery()->where('status', true);
 
         if ($filters->categoryId !== null) {
             $query->where('category_id', $filters->categoryId);
@@ -65,24 +83,10 @@ class CourseRepository extends Repository implements ICourseRepository
 
     public function getFilterProps(): array
     {
-        $categories = Category::query()
-            ->whereHas('courses', fn ($query) => $query->active())
-            ->withCount([
-                'courses as courses_count' => fn ($query) => $query->active(),
-            ])
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug'])
-            ->map(fn (Category $category): array => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'slug' => $category->slug,
-                'course_count' => $category->courses_count ?? 0,
-            ])
-            ->values()
-            ->all();
+        $categories = $this->categoryRepository->getCourseFilterCategories();
 
         $range = $this->model->newQuery()
-            ->active()
+            ->where('status', true)
             ->selectRaw('MIN(price) as price_min')
             ->selectRaw('MAX(price) as price_max')
             ->selectRaw('MIN(rating) as rating_min')
@@ -92,9 +96,9 @@ class CourseRepository extends Repository implements ICourseRepository
             ->first();
 
         $levels = Level::query()
-            ->whereHas('courses', fn ($query) => $query->active())
+            ->whereHas('courses', fn ($query) => $query->where('status', true))
             ->withCount([
-                'courses as courses_count' => fn ($query) => $query->active(),
+                'courses as courses_count' => fn ($query) => $query->where('status', true),
             ])
             ->orderBy('name')
             ->get(['id', 'name'])

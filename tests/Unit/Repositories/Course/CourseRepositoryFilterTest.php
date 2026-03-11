@@ -47,7 +47,7 @@ it('filters courses by category level ranges and keyword', function (): void {
         'learned' => 12,
     ]);
 
-    $repository = new CourseRepository(new Course);
+    $repository = app(CourseRepository::class);
 
     $filters = CourseFilter::fromArray([
         'category_id' => $categoryA->id,
@@ -93,7 +93,7 @@ it('filters courses with min only conditions', function (): void {
         'learned' => 25,
     ]);
 
-    $repository = new CourseRepository(new Course);
+    $repository = app(CourseRepository::class);
 
     $filters = CourseFilter::fromArray([
         'price_min' => 200,
@@ -131,7 +131,7 @@ it('filters courses with max only conditions', function (): void {
         'learned' => 25,
     ]);
 
-    $repository = new CourseRepository(new Course);
+    $repository = app(CourseRepository::class);
 
     $filters = CourseFilter::fromArray([
         'price_max' => 200,
@@ -159,7 +159,7 @@ it('matches keyword in the middle of course name', function (): void {
         'learned' => 10,
     ]);
 
-    $repository = new CourseRepository(new Course);
+    $repository = app(CourseRepository::class);
 
     $filters = CourseFilter::fromArray([
         'q' => 'asic',
@@ -213,7 +213,7 @@ it('builds filter props from existing courses', function (): void {
         'learned' => 12,
     ]);
 
-    $repository = new CourseRepository(new Course);
+    $repository = app(CourseRepository::class);
 
     $props = $repository->getFilterProps();
 
@@ -237,4 +237,23 @@ it('builds filter props from existing courses', function (): void {
     ]);
     expect(collect($props['categories'])->pluck('id')->all())->not()->toContain($categoryB->id);
     expect(collect($props['categories'])->pluck('id')->all())->not()->toContain($unusedCategory->id);
+});
+
+it('gets active course by slug', function (): void {
+    $activeCourse = Course::factory()->create([
+        'slug' => 'active-course',
+        'status' => true,
+    ]);
+    Course::factory()->create([
+        'slug' => 'inactive-course',
+        'status' => false,
+    ]);
+
+    $repository = app(CourseRepository::class);
+
+    $result = $repository->getBySlug('active-course');
+    $inactive = $repository->getBySlug('inactive-course');
+
+    expect($result?->id)->toBe($activeCourse->id);
+    expect($inactive)->toBeNull();
 });

@@ -16,7 +16,7 @@ uses(TestCase::class);
 
 it("implements shared service contract", function () {
     $model = new Course;
-    $repository = new CourseRepository($model);
+    $repository = app(CourseRepository::class);
     $service = new CourseService($repository);
     assertServiceContract($service, ICourseService::class, $repository);
 });
@@ -64,4 +64,23 @@ it('gets filter props via repository', function (): void {
     $result = $service->getFilterProps();
 
     expect($result)->toBe($expected);
+});
+
+it('gets course by slug via repository', function (): void {
+    $course = new Course;
+    $course->id = 123;
+    $course->name = 'Grammar 101';
+    $course->slug = 'grammar-101';
+
+    $repository = Mockery::mock(ICourseRepository::class);
+    $repository->shouldReceive('getBySlug')
+        ->once()
+        ->with('grammar-101')
+        ->andReturn($course);
+
+    $service = new CourseService($repository);
+
+    $result = $service->getBySlug('grammar-101');
+
+    expect($result?->id)->toBe($course->id);
 });
