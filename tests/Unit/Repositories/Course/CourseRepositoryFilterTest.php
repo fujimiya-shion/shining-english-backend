@@ -2,7 +2,10 @@
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseReview;
 use App\Models\Level;
+use App\Models\Lesson;
+use App\Models\LessonComment;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -256,4 +259,47 @@ it('gets active course by slug', function (): void {
 
     expect($result?->id)->toBe($activeCourse->id);
     expect($inactive)->toBeNull();
+});
+
+it('loads reviews and lesson comments when getting course by slug', function (): void {
+    $course = Course::factory()->create([
+        'slug' => 'course-has-feedback',
+        'status' => true,
+    ]);
+
+    $lesson = Lesson::query()->create([
+        'name' => 'Lesson With Comment',
+        'slug' => null,
+        'course_id' => $course->id,
+        'group_name' => 'Fundamentals',
+        'video_url' => 'lessons/example.mp4',
+        'description' => 'Lesson description',
+        'duration_minutes' => 12,
+        'star_reward_video' => 1,
+        'star_reward_quiz' => 0,
+        'has_quiz' => false,
+    ]);
+
+    CourseReview::query()->create([
+        'course_id' => $course->id,
+        'name' => 'Ha Linh',
+        'rating' => 5,
+        'content' => 'Rất tốt',
+    ]);
+
+    LessonComment::query()->create([
+        'lesson_id' => $lesson->id,
+        'name' => 'Ngoc Anh',
+        'content' => 'Có bài tập không ạ?',
+    ]);
+
+    $repository = app(CourseRepository::class);
+    $result = $repository->getBySlug('course-has-feedback');
+
+    expect($result)->not()->toBeNull();
+    expect($result?->relationLoaded('reviews'))->toBeTrue();
+    expect($result?->reviews->count())->toBe(1);
+    expect($result?->relationLoaded('lessons'))->toBeTrue();
+    expect($result?->lessons->first()?->relationLoaded('comments'))->toBeTrue();
+    expect($result?->lessons->first()?->comments->count())->toBe(1);
 });

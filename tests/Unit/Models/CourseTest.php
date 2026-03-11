@@ -49,6 +49,13 @@ it('defines enrollments relation', function (): void {
     expect((new Course)->enrollments())->toBeInstanceOf(HasMany::class);
 });
 
+it('defines reviews relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'reviews');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Course)->reviews())->toBeInstanceOf(HasMany::class);
+});
+
 it('uses soft deletes', function (): void {
     $model = new Course;
 

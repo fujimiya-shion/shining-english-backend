@@ -6,6 +6,7 @@ use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Lessons\Pages\CreateLesson;
 use App\Filament\Resources\Lessons\Pages\EditLesson;
 use App\Filament\Resources\Lessons\Pages\ListLessons;
+use App\Filament\Resources\Lessons\RelationManagers\LessonCommentsRelationManager;
 use App\Filament\Resources\Lessons\RelationManagers\QuizRelationManager;
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Filament\Resources\Lessons\Tables\LessonsTable;
@@ -46,6 +47,7 @@ class LessonResource extends BaseResource
     {
         return [
             QuizRelationManager::class,
+            LessonCommentsRelationManager::class,
         ];
     }
 
