@@ -10,6 +10,7 @@
         "bezhansalleh/filament-shield": "^4.1",
         "dedoc/scramble": "^0.13.12",
         "filament/filament": "^5.2",
+        "james-heinrich/getid3": "^1.9",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.24",

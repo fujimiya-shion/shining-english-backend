@@ -27,7 +27,20 @@ class CourseRepository extends Repository implements ICourseRepository
                 'category:id,name,slug',
                 'level:id,name',
                 'lessons' => fn ($query) => $query
-                    ->select(['id', 'name', 'slug', 'course_id', 'video_url', 'has_quiz', 'star_reward_video', 'star_reward_quiz'])
+                    ->select([
+                        'id',
+                        'name',
+                        'slug',
+                        'course_id',
+                        'group_name',
+                        'video_url',
+                        'description',
+                        'duration_minutes',
+                        'has_quiz',
+                        'star_reward_video',
+                        'star_reward_quiz',
+                    ])
+                    ->orderBy('group_name')
                     ->orderBy('id'),
             ])
             ->where('status', true)
