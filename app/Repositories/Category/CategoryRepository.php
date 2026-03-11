@@ -15,8 +15,10 @@ class CategoryRepository extends Repository implements ICategoryRepository
     public function getCourseFilterCategories(): array
     {
         return $this->model->newQuery()
-            ->whereHas('courses')
-            ->withCount('courses')
+            ->whereHas('courses', fn ($query) => $query->where('status', true))
+            ->withCount([
+                'courses as courses_count' => fn ($query) => $query->where('status', true),
+            ])
             ->orderBy('name')
             ->get(['id', 'name', 'slug'])
             ->map(fn (Category $category): array => [

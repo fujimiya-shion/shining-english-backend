@@ -23,13 +23,14 @@ class CourseRepository extends Repository implements ICourseRepository
     public function getBySlug(string $slug): ?Course
     {
         return $this->model->newQuery()
+            ->where('status', true)
             ->where('slug', $slug)
             ->first();
     }
 
     public function filter(CourseFilter $filters): LengthAwarePaginator
     {
-        $query = $this->model->newQuery();
+        $query = $this->model->newQuery()->where('status', true);
 
         if ($filters->categoryId !== null) {
             $query->where('category_id', $filters->categoryId);
@@ -78,6 +79,7 @@ class CourseRepository extends Repository implements ICourseRepository
         $categories = $this->categoryRepository->getCourseFilterCategories();
 
         $range = $this->model->newQuery()
+            ->where('status', true)
             ->selectRaw('MIN(price) as price_min')
             ->selectRaw('MAX(price) as price_max')
             ->selectRaw('MIN(rating) as rating_min')
@@ -87,8 +89,10 @@ class CourseRepository extends Repository implements ICourseRepository
             ->first();
 
         $levels = Level::query()
-            ->whereHas('courses')
-            ->withCount('courses')
+            ->whereHas('courses', fn ($query) => $query->where('status', true))
+            ->withCount([
+                'courses as courses_count' => fn ($query) => $query->where('status', true),
+            ])
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (Level $level): array => [
