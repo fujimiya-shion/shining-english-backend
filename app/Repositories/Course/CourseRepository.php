@@ -23,6 +23,13 @@ class CourseRepository extends Repository implements ICourseRepository
     public function getBySlug(string $slug): ?Course
     {
         return $this->model->newQuery()
+            ->with([
+                'category:id,name,slug',
+                'level:id,name',
+                'lessons' => fn ($query) => $query
+                    ->select(['id', 'name', 'slug', 'course_id', 'video_url', 'has_quiz', 'star_reward_video', 'star_reward_quiz'])
+                    ->orderBy('id'),
+            ])
             ->where('status', true)
             ->where('slug', $slug)
             ->first();
