@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Models\Lesson;
+use App\Util\Video\VideoMetadataReader;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,7 +19,10 @@ test('lesson form defines expected components', function (): void {
         'name',
         'slug',
         'course_id',
+        'group_name',
         'video_url',
+        'duration_minutes',
+        'description',
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
@@ -52,6 +56,159 @@ test('lesson form configures numeric star inputs', function (): void {
 
     expect($components['star_reward_video']->isNumeric())->toBeTrue();
     expect($components['star_reward_quiz']->isNumeric())->toBeTrue();
+});
+
+test('lesson form clears duration when video state is empty', function (): void {
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
+    $components = schemaComponentMap($schema);
+    /** @var \Filament\Forms\Components\FileUpload $fileUpload */
+    $fileUpload = $components['video_url'];
+
+    $hooks = getProtectedPropertyValue($fileUpload, 'afterStateUpdated');
+    $hook = $hooks[0] ?? null;
+
+    expect($hook)->toBeInstanceOf(Closure::class);
+
+    $state = [];
+    $set = new class($fileUpload, $state) extends Set
+    {
+        public function __construct(Component $component, public array &$state)
+        {
+            parent::__construct($component);
+        }
+
+        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        {
+            $this->state[$path] = $value;
+            return $value;
+        }
+    };
+
+    $hook($set, null);
+
+    expect($state['duration_minutes'])->toBeNull();
+});
+
+test('lesson form sets duration from relative video path', function (): void {
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
+    $components = schemaComponentMap($schema);
+    /** @var \Filament\Forms\Components\FileUpload $fileUpload */
+    $fileUpload = $components['video_url'];
+
+    $hooks = getProtectedPropertyValue($fileUpload, 'afterStateUpdated');
+    $hook = $hooks[0] ?? null;
+
+    expect($hook)->toBeInstanceOf(Closure::class);
+
+    $reader = \Mockery::mock(VideoMetadataReader::class);
+    $reader->shouldReceive('detectDurationMinutes')
+        ->once()
+        ->with('lessons/video.mp4', 'local')
+        ->andReturn(9);
+    app()->instance(VideoMetadataReader::class, $reader);
+
+    $state = [];
+    $set = new class($fileUpload, $state) extends Set
+    {
+        public function __construct(Component $component, public array &$state)
+        {
+            parent::__construct($component);
+        }
+
+        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        {
+            $this->state[$path] = $value;
+            return $value;
+        }
+    };
+
+    $hook($set, 'lessons/video.mp4');
+
+    expect($state['duration_minutes'])->toBe(9);
+});
+
+test('lesson form resolves array state and sets duration', function (): void {
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
+    $components = schemaComponentMap($schema);
+    /** @var \Filament\Forms\Components\FileUpload $fileUpload */
+    $fileUpload = $components['video_url'];
+
+    $hooks = getProtectedPropertyValue($fileUpload, 'afterStateUpdated');
+    $hook = $hooks[0] ?? null;
+
+    expect($hook)->toBeInstanceOf(Closure::class);
+
+    $reader = \Mockery::mock(VideoMetadataReader::class);
+    $reader->shouldReceive('detectDurationMinutes')
+        ->once()
+        ->with('lessons/first.mp4', 'local')
+        ->andReturn(3);
+    app()->instance(VideoMetadataReader::class, $reader);
+
+    $state = [];
+    $set = new class($fileUpload, $state) extends Set
+    {
+        public function __construct(Component $component, public array &$state)
+        {
+            parent::__construct($component);
+        }
+
+        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        {
+            $this->state[$path] = $value;
+            return $value;
+        }
+    };
+
+    $hook($set, ['lessons/first.mp4', 'lessons/second.mp4']);
+
+    expect($state['duration_minutes'])->toBe(3);
+});
+
+test('lesson form sets duration from uploaded temp file object', function (): void {
+    $schema = LessonForm::configure(makeSchema()->model(Lesson::class));
+    $components = schemaComponentMap($schema);
+    /** @var \Filament\Forms\Components\FileUpload $fileUpload */
+    $fileUpload = $components['video_url'];
+
+    $hooks = getProtectedPropertyValue($fileUpload, 'afterStateUpdated');
+    $hook = $hooks[0] ?? null;
+
+    expect($hook)->toBeInstanceOf(Closure::class);
+
+    $reader = \Mockery::mock(VideoMetadataReader::class);
+    $reader->shouldReceive('detectDurationMinutesFromAbsolutePath')
+        ->once()
+        ->with('/tmp/fake-upload.mp4')
+        ->andReturn(5);
+    app()->instance(VideoMetadataReader::class, $reader);
+
+    $uploadLike = new class
+    {
+        public function getRealPath(): string
+        {
+            return '/tmp/fake-upload.mp4';
+        }
+    };
+
+    $state = [];
+    $set = new class($fileUpload, $state) extends Set
+    {
+        public function __construct(Component $component, public array &$state)
+        {
+            parent::__construct($component);
+        }
+
+        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        {
+            $this->state[$path] = $value;
+            return $value;
+        }
+    };
+
+    $hook($set, $uploadLike);
+
+    expect($state['duration_minutes'])->toBe(5);
 });
 
 test('lesson form toggles quiz state when has_quiz changes', function (): void {

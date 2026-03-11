@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Lesson;
+use App\Observers\LessonObserver;
 use App\Repositories\Cart\CartRepository;
 use App\Repositories\Cart\ICartRepository;
 use App\Repositories\Category\CategoryRepository;
@@ -94,6 +96,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Lesson::observe(LessonObserver::class);
     }
 }

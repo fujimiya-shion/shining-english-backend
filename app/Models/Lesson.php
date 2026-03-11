@@ -23,10 +23,18 @@ class Lesson extends Model
         'name',
         'slug',
         'course_id',
+        'group_name',
         'video_url',
+        'description',
+        'duration_minutes',
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
+    ];
+
+    protected $casts = [
+        'has_quiz' => 'boolean',
+        'duration_minutes' => 'integer',
     ];
 
     public function course(): BelongsTo
