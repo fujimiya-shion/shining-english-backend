@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
+use App\Models\Course;
 use App\Services\Course\ICourseService;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Http\Request;
@@ -147,5 +148,47 @@ it('returns filter props from service', function (): void {
         'status' => true,
         'status_code' => 200,
         'data' => $payload,
+    ]);
+});
+
+it('shows course by slug', function (): void {
+    $course = new Course;
+    $course->id = 9;
+    $course->name = 'Grammar Basics';
+    $course->slug = 'grammar-basics';
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getBySlug')
+        ->once()
+        ->with('grammar-basics')
+        ->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/slug/grammar-basics', 'GET');
+
+    $response = $controller->showBySlug('grammar-basics');
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+    ]);
+});
+
+it('returns not found when slug does not exist', function (): void {
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getBySlug')
+        ->once()
+        ->with('missing-course')
+        ->andReturn(null);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $response = $controller->showBySlug('missing-course');
+
+    assertJsonResponsePayload($response, 404, [
+        'status' => false,
+        'status_code' => 404,
     ]);
 });

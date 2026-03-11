@@ -2,6 +2,7 @@
 
 namespace App\Services\Course;
 
+use App\Models\Course;
 use App\Repositories\Course\ICourseRepository;
 use App\Services\Service;
 use App\ValueObjects\CourseFilter;
@@ -15,6 +16,11 @@ class CourseService extends Service implements ICourseService
     {
         parent::__construct($repository);
         $this->courseRepository = $repository;
+    }
+
+    public function getBySlug(string $slug): ?Course
+    {
+        return $this->courseRepository->getBySlug($slug);
     }
 
     public function filter(CourseFilter $filters): LengthAwarePaginator

@@ -41,4 +41,15 @@ class CourseController extends ApiController
     {
         return $this->success(data: $this->service->getFilterProps());
     }
+
+    public function showBySlug(string $slug): JsonResponse
+    {
+        $record = $this->service->getBySlug($slug);
+
+        if (! $record) {
+            return $this->notfound();
+        }
+
+        return $this->success(data: $record);
+    }
 }
