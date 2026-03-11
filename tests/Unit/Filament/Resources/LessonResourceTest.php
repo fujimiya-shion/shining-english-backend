@@ -2,6 +2,8 @@
 
 use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Lessons\LessonResource;
+use App\Filament\Resources\Lessons\RelationManagers\LessonCommentsRelationManager;
+use App\Filament\Resources\Lessons\RelationManagers\QuizRelationManager;
 use App\Models\Lesson;
 use App\Services\Lesson\ILessonService;
 
@@ -18,6 +20,13 @@ test('lesson resource defines expected pages', function (): void {
     $pages = LessonResource::getPages();
 
     expect($pages)->toHaveKeys(['index', 'create', 'edit']);
+});
+
+test('lesson resource registers expected relation managers', function (): void {
+    $relations = LessonResource::getRelations();
+
+    expect($relations)->toContain(QuizRelationManager::class);
+    expect($relations)->toContain(LessonCommentsRelationManager::class);
 });
 
 test('lesson resource configures form and table', function (): void {

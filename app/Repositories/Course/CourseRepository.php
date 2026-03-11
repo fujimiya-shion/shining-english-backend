@@ -26,6 +26,10 @@ class CourseRepository extends Repository implements ICourseRepository
             ->with([
                 'category:id,name,slug',
                 'level:id,name',
+                'reviews' => fn ($query) => $query
+                    ->select(['id', 'course_id', 'user_id', 'rating', 'content', 'created_at'])
+                    ->with(['user:id,name,avatar'])
+                    ->orderByDesc('created_at'),
                 'lessons' => fn ($query) => $query
                     ->select([
                         'id',
@@ -39,6 +43,12 @@ class CourseRepository extends Repository implements ICourseRepository
                         'has_quiz',
                         'star_reward_video',
                         'star_reward_quiz',
+                    ])
+                    ->with([
+                        'comments' => fn ($commentQuery) => $commentQuery
+                            ->select(['id', 'lesson_id', 'user_id', 'content', 'created_at'])
+                            ->with(['user:id,name,avatar'])
+                            ->orderByDesc('created_at'),
                     ])
                     ->orderBy('group_name')
                     ->orderBy('id'),

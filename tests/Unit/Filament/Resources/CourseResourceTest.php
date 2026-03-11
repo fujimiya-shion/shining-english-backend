@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Courses\CourseResource;
+use App\Filament\Resources\Courses\RelationManagers\CourseReviewsRelationManager;
 use App\Filament\Resources\Courses\RelationManagers\EnrollmentsRelationManager;
 use App\Models\Course;
 use App\Services\Course\ICourseService;
@@ -25,6 +26,7 @@ test('course resource registers enrollment relation manager', function (): void 
     $relations = CourseResource::getRelations();
 
     expect($relations)->toContain(EnrollmentsRelationManager::class);
+    expect($relations)->toContain(CourseReviewsRelationManager::class);
 });
 
 test('course resource configures form and table', function (): void {

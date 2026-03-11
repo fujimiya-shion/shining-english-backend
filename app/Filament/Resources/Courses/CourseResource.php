@@ -6,6 +6,7 @@ use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Courses\Pages\CreateCourse;
 use App\Filament\Resources\Courses\Pages\EditCourse;
 use App\Filament\Resources\Courses\Pages\ListCourses;
+use App\Filament\Resources\Courses\RelationManagers\CourseReviewsRelationManager;
 use App\Filament\Resources\Courses\RelationManagers\EnrollmentsRelationManager;
 use App\Filament\Resources\Courses\Schemas\CourseForm;
 use App\Filament\Resources\Courses\Tables\CoursesTable;
@@ -46,6 +47,7 @@ class CourseResource extends BaseResource
     {
         return [
             EnrollmentsRelationManager::class,
+            CourseReviewsRelationManager::class,
         ];
     }
 
