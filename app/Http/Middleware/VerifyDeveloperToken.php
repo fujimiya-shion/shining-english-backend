@@ -18,13 +18,22 @@ class VerifyDeveloperToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->header('Authorization');
-        $developer = PersonalAccessToken::where([
-            'name' => 'developer_access_token',
-            'token' => $token,
-        ])->first();
-        if(! $developer)
-            return $this->unauthorized("Access Token is not set or invalid");
+        $token = $request->bearerToken() ?: $request->header('Authorization');
+
+        if (! is_string($token) || trim($token) === '') {
+            return $this->unauthorized('Access Token is not set or invalid');
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (! $accessToken || $accessToken->name !== 'developer_access_token') {
+            return $this->unauthorized('Access Token is not set or invalid');
+        }
+
+        if (! $accessToken->tokenable instanceof \App\Models\Developer) {
+            return $this->unauthorized('Access Token is not set or invalid');
+        }
+
         return $next($request);
     }
 }
