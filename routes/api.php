@@ -19,7 +19,9 @@ Route::prefix('/v1')->group(function () {
                 '/filter',
                 'filter',
             );
+            Route::get('/filter-props', 'getFilterProps');
             Route::get('/', 'index');
+            Route::get('/slug/{slug}', 'showBySlug');
             Route::get('/{id}', 'show');
         });
 

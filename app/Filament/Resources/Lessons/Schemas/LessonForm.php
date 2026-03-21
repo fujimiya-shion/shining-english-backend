@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Lessons\Schemas;
 
+use App\Util\Video\VideoMetadataReader;
+use App\Util\Php\PhpUploadLimit;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
@@ -36,14 +39,52 @@ class LessonForm
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->columnSpan(12),
+                            ->columnSpan(6),
+                        TextInput::make('group_name')
+                            ->label('Group')
+                            ->maxLength(255)
+                            ->placeholder('VD: Fundamentals of English')
+                            ->columnSpan(6),
                         FileUpload::make('video_url')
                             ->label('Video')
                             ->required()
                             ->acceptedFileTypes(['video/*'])
+                            ->maxSize(PhpUploadLimit::maxKilobytes())
                             ->disk('local')
                             ->directory('lessons')
                             ->extraAttributes(['class' => 'lesson-video-upload'])
+                            ->columnSpan(8)
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, mixed $state): void {
+                                if (! $state) {
+                                    $set('duration_minutes', null);
+
+                                    return;
+                                }
+
+                                $videoMetadataReader = app(VideoMetadataReader::class);
+                                $minutes = null;
+
+                                $resolvedState = is_array($state) ? reset($state) : $state;
+
+                                if (is_object($resolvedState) && method_exists($resolvedState, 'getRealPath')) {
+                                    $minutes = $videoMetadataReader
+                                        ->detectDurationMinutesFromAbsolutePath($resolvedState->getRealPath());
+                                } elseif (is_string($resolvedState)) {
+                                    $minutes = $videoMetadataReader->detectDurationMinutes($resolvedState, 'local');
+                                }
+
+                                $set('duration_minutes', $minutes);
+                            }),
+                        TextInput::make('duration_minutes')
+                            ->label('Duration (minutes)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->readOnly()
+                            ->helperText('Tự động lấy từ metadata của video khi upload.')
+                            ->columnSpan(4),
+                        Textarea::make('description')
+                            ->rows(4)
                             ->columnSpan(12),
                         TextInput::make('star_reward_video')
                             ->numeric()

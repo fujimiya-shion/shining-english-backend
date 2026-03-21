@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
+use App\Models\Course;
 use App\Services\Course\ICourseService;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Http\Request;
@@ -74,7 +75,7 @@ it('filters courses with supported criteria', function (): void {
         ->with(
             \Mockery::on(function (CourseFilter $filters): bool {
                 return $filters->categoryId === 2
-                    && $filters->status === false
+                    && $filters->levelId === null
                     && $filters->priceMin === 100
                     && $filters->priceMax === 300
                     && $filters->ratingMin === 3.5
@@ -90,7 +91,6 @@ it('filters courses with supported criteria', function (): void {
     $controller = app()->make(CourseController::class);
     $request = CourseFilterRequest::create('/api/v1/courses/filter', 'GET', [
         'category_id' => 2,
-        'status' => false,
         'price_min' => 100,
         'price_max' => 300,
         'rating_min' => 3.5,
@@ -114,5 +114,81 @@ it('filters courses with supported criteria', function (): void {
             'total' => 0,
             'page_count' => 0,
         ],
+    ]);
+});
+
+it('returns filter props from service', function (): void {
+    $payload = [
+        'categories' => [
+            [
+                'id' => 1,
+                'name' => 'Grammar Basics',
+                'slug' => 'grammar-basics',
+                'course_count' => 10,
+            ],
+        ],
+        'price' => ['min' => 100, 'max' => 500],
+        'rating' => ['min' => 1.0, 'max' => 5.0],
+        'learned' => ['min' => 0, 'max' => 100],
+        'levels' => [
+            ['value' => 1, 'label' => 'Beginner', 'count' => 6],
+            ['value' => 2, 'label' => 'Intermediate', 'count' => 4],
+        ],
+    ];
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getFilterProps')->once()->andReturn($payload);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $response = $controller->getFilterProps();
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'data' => $payload,
+    ]);
+});
+
+it('shows course by slug', function (): void {
+    $course = new Course;
+    $course->id = 9;
+    $course->name = 'Grammar Basics';
+    $course->slug = 'grammar-basics';
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getBySlug')
+        ->once()
+        ->with('grammar-basics')
+        ->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/slug/grammar-basics', 'GET');
+
+    $response = $controller->showBySlug('grammar-basics');
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+    ]);
+});
+
+it('returns not found when slug does not exist', function (): void {
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getBySlug')
+        ->once()
+        ->with('missing-course')
+        ->andReturn(null);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $response = $controller->showBySlug('missing-course');
+
+    assertJsonResponsePayload($response, 404, [
+        'status' => false,
+        'status_code' => 404,
     ]);
 });

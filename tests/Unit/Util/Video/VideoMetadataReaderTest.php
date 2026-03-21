@@ -1,0 +1,88 @@
+<?php
+
+use App\Util\Video\VideoMetadataReader;
+use Tests\TestCase;
+
+uses(TestCase::class);
+
+test('video metadata reader returns null when relative path is empty', function (): void {
+    $reader = new VideoMetadataReader;
+
+    expect($reader->detectDurationMinutes(null))->toBeNull();
+});
+
+test('video metadata reader returns null when disk resolution fails', function (): void {
+    $reader = new VideoMetadataReader;
+
+    expect($reader->detectDurationMinutes('lessons/missing.mp4', 'invalid-disk'))->toBeNull();
+});
+
+test('video metadata reader resolves relative path and delegates to absolute path analyzer', function (): void {
+    $reader = new class extends VideoMetadataReader
+    {
+        public ?string $capturedPath = null;
+
+        public function detectDurationMinutesFromAbsolutePath(?string $absolutePath): ?int
+        {
+            $this->capturedPath = $absolutePath;
+
+            return 7;
+        }
+    };
+
+    $result = $reader->detectDurationMinutes('lessons/test.mp4');
+
+    expect($result)->toBe(7);
+    expect($reader->capturedPath)->toContain('/lessons/test.mp4');
+});
+
+test('video metadata reader returns null when absolute path is invalid', function (): void {
+    $reader = new VideoMetadataReader;
+
+    expect($reader->detectDurationMinutesFromAbsolutePath(null))->toBeNull();
+    expect($reader->detectDurationMinutesFromAbsolutePath('/tmp/not-found.mp4'))->toBeNull();
+});
+
+test('video metadata reader returns null when analyzer has no numeric duration', function (): void {
+    $reader = new VideoMetadataReader;
+    $path = tempnam(sys_get_temp_dir(), 'reader-');
+    file_put_contents($path, 'not-a-video');
+
+    expect($reader->detectDurationMinutesFromAbsolutePath($path))->toBeNull();
+
+    @unlink($path);
+});
+
+test('video metadata reader converts playtime seconds into minutes', function (): void {
+    $reader = new class extends VideoMetadataReader
+    {
+        protected function analyzeFile(string $absolutePath): array
+        {
+            return ['playtime_seconds' => 61];
+        }
+    };
+
+    $path = tempnam(sys_get_temp_dir(), 'reader-');
+    file_put_contents($path, 'stub');
+
+    expect($reader->detectDurationMinutesFromAbsolutePath($path))->toBe(2);
+
+    @unlink($path);
+});
+
+test('video metadata reader catches analyzer exceptions and returns null', function (): void {
+    $reader = new class extends VideoMetadataReader
+    {
+        protected function analyzeFile(string $absolutePath): array
+        {
+            throw new RuntimeException('analyze failed');
+        }
+    };
+
+    $path = tempnam(sys_get_temp_dir(), 'reader-');
+    file_put_contents($path, 'stub');
+
+    expect($reader->detectDurationMinutesFromAbsolutePath($path))->toBeNull();
+
+    @unlink($path);
+});

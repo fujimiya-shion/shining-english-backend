@@ -30,9 +30,20 @@ class LessonsTable
                     ->label('Course')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('group_name')
+                    ->label('Group')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('duration_minutes')
+                    ->label('Duration')
+                    ->formatStateUsing(fn (?int $state): string => $state ? "{$state}m" : '-')
+                    ->sortable(),
                 TextColumn::make('video_url')
                     ->label('Video URL')
                     ->limit(40)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('description')
+                    ->limit(60)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('star_reward_video')
                     ->label('Stars (Video)')

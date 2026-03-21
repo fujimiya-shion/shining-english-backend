@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Slugable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lesson extends Model
 {
-    use SoftDeletes, Slugable;
+    use HasFactory, SoftDeletes, Slugable;
 
     protected $attributes = [
         'star_reward_video' => 0,
@@ -22,10 +23,18 @@ class Lesson extends Model
         'name',
         'slug',
         'course_id',
+        'group_name',
         'video_url',
+        'description',
+        'duration_minutes',
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
+    ];
+
+    protected $casts = [
+        'has_quiz' => 'boolean',
+        'duration_minutes' => 'integer',
     ];
 
     public function course(): BelongsTo

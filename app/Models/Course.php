@@ -20,6 +20,7 @@ class Course extends Model
         'status',
         'thumbnail',
         'category_id',
+        'level_id',
         'description',
         'rating',
         'learned',
@@ -28,6 +29,11 @@ class Course extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
     }
 
     public function lessons(): HasMany
