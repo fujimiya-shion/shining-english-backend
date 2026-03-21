@@ -10,6 +10,8 @@ use App\Repositories\Category\CategoryRepository;
 use App\Repositories\Category\ICategoryRepository;
 use App\Repositories\Course\CourseRepository;
 use App\Repositories\Course\ICourseRepository;
+use App\Repositories\Developer\DeveloperRepository;
+use App\Repositories\Developer\IDeveloperRepository;
 use App\Repositories\Enrollment\EnrollmentRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Repositories\Lesson\ILessonRepository;
@@ -34,6 +36,8 @@ use App\Services\Cart\CartService;
 use App\Services\Cart\ICartService;
 use App\Services\Course\CourseService;
 use App\Services\Course\ICourseService;
+use App\Services\Developer\DeveloperService;
+use App\Services\Developer\IDeveloperService;
 use App\Services\Enrollment\EnrollmentService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Lesson\ILessonService;
@@ -76,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserQuizAttemptRepository::class, UserQuizAttemptRepository::class);
         $this->app->bind(IUserRepository::class, UserRepository::class);
         $this->app->bind(IUserDeviceRepository::class, UserDeviceRepository::class);
+        $this->app->bind(IDeveloperRepository::class, DeveloperRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
         $this->app->bind(IEnrollmentService::class, EnrollmentService::class);
@@ -89,6 +94,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserQuizAttemptService::class, UserQuizAttemptService::class);
         $this->app->bind(IUserService::class, UserService::class);
         $this->app->bind(IUserDeviceService::class, UserDeviceService::class);
+        $this->app->bind(IDeveloperService::class, DeveloperService::class);
     }
 
     /**
