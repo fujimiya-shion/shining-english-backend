@@ -7,6 +7,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->withHeader('Authorization', createDeveloperAccessToken());
+});
+
 it('updates current user profile', function (): void {
     $user = User::factory()->create([
         'name' => 'Old Name',

@@ -9,6 +9,10 @@ use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->withHeader('Authorization', createDeveloperAccessToken());
+});
+
 it('registers a user', function (): void {
     $email = 'newuser-'.Str::random(8).'@example.com';
 
