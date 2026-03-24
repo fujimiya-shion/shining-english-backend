@@ -4,13 +4,17 @@ namespace App\Services\User;
 use App\DTO\User\Auth\LoginResponse;
 use App\DTO\User\Auth\RegisterResponse;
 use App\Jobs\InitUserStarJob;
+use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
 use App\Services\Service;
 use App\ValueObjects\DeviceInfo;
 use Exception;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Throwable;
 class UserService extends Service implements IUserService {
@@ -35,11 +39,11 @@ class UserService extends Service implements IUserService {
             ]);
 
             if($created instanceof User) {
-                $token = $created->createToken('user_auth_token')->plainTextToken;
                 if ($created->id !== null) {
                     dispatch(new InitUserStarJob($created->id));
+                    dispatch(new SendEmailVerificationJob($created->id));
                 }
-                return new RegisterResponse($token, $created);
+                return new RegisterResponse($created);
             }
             throw new Exception("return model is not instance of user");
 
@@ -50,10 +54,14 @@ class UserService extends Service implements IUserService {
 
     public function login(string $email, string $password, DeviceInfo $device): LoginResponse {
         try {
-            $user = $this->userRepository->getBy(['email' => $email])->first();
+            $user = $this->userRepository->findByEmail($email);
 
             if (!$user instanceof User || !Hash::check($password, $user->password)) {
                 throw new Exception('Invalid credentials');
+            }
+
+            if (! $user->hasVerifiedEmail()) {
+                throw new Exception('Email is not verified.');
             }
 
             $tokenResult = $user->createToken('user_auth_token');
@@ -78,6 +86,37 @@ class UserService extends Service implements IUserService {
         $accessToken->delete();
 
         return true;
+    }
+
+    public function sendPasswordResetLink(string $email): void
+    {
+        Password::broker('users')->sendResetLink([
+            'email' => $email,
+        ]);
+    }
+
+    public function resetPassword(string $email, string $token, string $password): bool
+    {
+        $status = Password::broker('users')->reset(
+            [
+                'email' => $email,
+                'token' => $token,
+                'password' => $password,
+                'password_confirmation' => $password,
+            ],
+            function (User $user, string $password): void {
+                $user->forceFill([
+                    'password' => $password,
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                $user->tokens()->delete();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET;
     }
 
     protected function createUserDevice(User $user, DeviceInfo $device, ?int $tokenId): void {
