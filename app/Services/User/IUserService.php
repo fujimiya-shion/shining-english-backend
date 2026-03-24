@@ -11,4 +11,8 @@ interface IUserService extends IService {
     public function login(string $email, string $password, DeviceInfo $device): LoginResponse;
 
     public function logoutByToken(string $token): bool;
+
+    public function sendPasswordResetLink(string $email): void;
+
+    public function resetPassword(string $email, string $token, string $password): bool;
 }

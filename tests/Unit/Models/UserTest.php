@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\Auth\ResetPasswordNotification;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 
 it('defines fillable attributes', function (): void {
     $user = new User;
@@ -98,4 +101,26 @@ it('does not rehash an already hashed password', function (): void {
 
     expect($user->password)->toBe($hashed);
     expect(Hash::check('secret', $user->password))->toBeTrue();
+});
+
+it('sends custom password reset notification', function (): void {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $user->sendPasswordResetNotification('reset-token');
+
+    Notification::assertSentTo($user, ResetPasswordNotification::class);
+});
+
+it('sends email verification notification', function (): void {
+    Notification::fake();
+
+    $user = User::factory()->create([
+        'email_verified_at' => null,
+    ]);
+
+    $user->sendEmailVerificationNotification();
+
+    Notification::assertSentTo($user, VerifyEmail::class);
 });

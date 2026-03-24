@@ -95,7 +95,17 @@ class CourseRepository extends Repository implements ICourseRepository
         }
 
         if ($filters->keyword !== null) {
-            $query->whereRaw('MATCH(name, slug) AGAINST (? IN BOOLEAN MODE)', [$filters->keyword]);
+            $keyword = trim($filters->keyword);
+            $booleanKeyword = collect(preg_split('/\s+/', $keyword))
+                ->filter()
+                ->map(fn (string $term): string => "{$term}*")
+                ->implode(' ');
+
+            $query->where(function ($query) use ($booleanKeyword, $keyword): void {
+                $query->whereRaw('MATCH(name, slug) AGAINST (? IN BOOLEAN MODE)', [$booleanKeyword])
+                    ->orWhere('name', 'like', "%{$keyword}%")
+                    ->orWhere('slug', 'like', "%{$keyword}%");
+            });
         }
 
         $options = $filters->options ?? new QueryOption;

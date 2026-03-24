@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1\User;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Api\V1\User\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\User\LoginRequest;
 use App\Http\Requests\Api\V1\User\RegisterRequest;
+use App\Http\Requests\Api\V1\User\ResetPasswordRequest;
 use App\Services\User\IUserService;
 use App\Traits\Jsonable;
 use App\ValueObjects\DeviceInfo;
@@ -75,5 +77,29 @@ class AuthController extends ApiController {
         }
 
         return $this->success('Logged out');
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $this->service->sendPasswordResetLink($request->validated('email'));
+
+        return $this->success('If your email exists, a password reset link has been sent.');
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        $reset = $this->service->resetPassword(
+            $data['email'],
+            $data['token'],
+            $data['password'],
+        );
+
+        if (! $reset) {
+            return $this->error('Invalid or expired reset token.', 422);
+        }
+
+        return $this->success('Password reset successfully.');
     }
 }

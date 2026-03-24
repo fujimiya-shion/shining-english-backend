@@ -56,6 +56,14 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:fast": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --parallel"
+        ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "XDEBUG_MODE=off php -d pcov.enabled=1 artisan test --parallel --coverage"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",

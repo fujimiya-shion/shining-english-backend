@@ -9,11 +9,11 @@ use App\Models\LessonComment;
 use App\Models\User;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 uses(TestCase::class);
-uses(DatabaseMigrations::class);
+uses(RefreshDatabase::class);
 
 it('filters courses by category level ranges and keyword', function (): void {
     $categoryA = Category::factory()->create();
