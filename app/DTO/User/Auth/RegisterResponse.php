@@ -14,4 +14,8 @@ class RegisterResponse {
             'email_verification_sent' => true,
         ];
     }
+
+    public function isSuccessfully(): bool {
+        return $this->user != null;
+    }
 }

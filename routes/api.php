@@ -47,6 +47,7 @@ Route::prefix('/v1')->group(function () {
             ->group(function () {
                 Route::post('/register', 'register');
                 Route::post('/login', 'login');
+                Route::post('/third-party-login', 'thirdPartyLogin');
                 Route::post('/forgot-password', 'forgotPassword');
                 Route::post('/reset-password', 'resetPassword');
             });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AuthenticatedBy;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use App\Notifications\Auth\ResetPasswordNotification;
@@ -32,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'avatar',
         'city_id',
         'password',
+        'authenticated_by',
         'email_verified_at',
     ];
 
@@ -56,6 +58,7 @@ class User extends Authenticatable implements MustVerifyEmailContract
             'email_verified_at' => 'datetime',
             'birthday' => 'date',
             'password' => 'hashed',
+            'authenticated_by' => AuthenticatedBy::class,
         ];
     }
 
@@ -94,8 +97,13 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasMany(LessonComment::class);
     }
 
-    public function setPasswordAttribute(string $password): void
+    public function setPasswordAttribute(?string $password): void
     {
+        if ($password === null || $password === '') {
+            $this->attributes['password'] = null;
+            return;
+        }
+
         $this->attributes['password'] = Hash::needsRehash($password)
             ? Hash::make($password)
             : $password;
