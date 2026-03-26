@@ -25,9 +25,7 @@ class ThirdPartyLoginRequest extends FormRequest
     {
         return [
             'access_token' => ['required', 'string'],
-            'id_token' => ['required', 'string'],
             'provider' => ['required', Rule::enum(ThirdPartyAuthProviders::class)],
-            'name' => ['required', 'string'],
             'device_identifier' => ['required', 'string'],
             'device_name' => ['nullable', 'string'],
             'platform' => ['nullable', 'string'],
