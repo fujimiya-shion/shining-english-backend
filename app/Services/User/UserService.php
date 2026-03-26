@@ -48,13 +48,18 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
                 'has_password' => ! empty($password),
             ]);
 
-            $created = $this->userRepository->create([
+            $payload = [
                 'name' => $name,
                 'email' => $email,
                 'phone' => $phone,
                 'password' => $password,
-                'authenticated_by' => $authenticatedBy,
-            ]);
+            ];
+
+            if ($authenticatedBy !== AuthenticatedBy::Local) {
+                $payload['authenticated_by'] = $authenticatedBy->value;
+            }
+
+            $created = $this->userRepository->create($payload);
 
             if($created instanceof User) {
                 if ($created->id !== null) {
