@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Integrations\Auth\Strategies\GoogleAuthStrategy;
 use App\Models\Lesson;
 use App\Observers\LessonObserver;
 use App\Repositories\Cart\CartRepository;
@@ -95,6 +96,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserService::class, UserService::class);
         $this->app->bind(IUserDeviceService::class, UserDeviceService::class);
         $this->app->bind(IDeveloperService::class, DeveloperService::class);
+
+        $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy());
     }
 
     /**

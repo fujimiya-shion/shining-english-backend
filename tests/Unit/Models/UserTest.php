@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AuthenticatedBy;
 use App\Models\User;
 use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -20,6 +21,7 @@ it('defines fillable attributes', function (): void {
         'avatar',
         'city_id',
         'password',
+        'authenticated_by',
         'email_verified_at',
     ]);
 });
@@ -40,6 +42,7 @@ it('casts attributes correctly', function (): void {
         'email_verified_at' => 'datetime',
         'birthday' => 'date',
         'password' => 'hashed',
+        'authenticated_by' => AuthenticatedBy::class,
     ]);
 });
 
