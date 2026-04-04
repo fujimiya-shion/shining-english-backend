@@ -68,6 +68,13 @@ Route::prefix('/v1')->group(function () {
             });
     
         Route::middleware(VerifyUserToken::class)
+            ->controller(CourseController::class)
+            ->prefix('/courses')
+            ->group(function () {
+                Route::get('/{id}/access', 'access');
+            });
+
+        Route::middleware(VerifyUserToken::class)
             ->controller(QuizAttemptController::class)
             ->prefix('/quizzes/{quizId}/attempts')
             ->group(function () {
@@ -80,6 +87,7 @@ Route::prefix('/v1')->group(function () {
             ->controller(CartController::class)
             ->prefix('/cart')
             ->group(function () {
+                Route::post('/items', 'store');
                 Route::get('/items', 'items');
                 Route::get('/count', 'count');
                 Route::delete('/clear', 'clear');
