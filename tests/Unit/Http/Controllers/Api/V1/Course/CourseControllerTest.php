@@ -3,7 +3,10 @@
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
 use App\Models\Course;
+use App\Models\User;
+use App\Services\Cart\ICartService;
 use App\Services\Course\ICourseService;
+use App\Services\Enrollment\IEnrollmentService;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -186,6 +189,81 @@ it('returns not found when slug does not exist', function (): void {
 
     $controller = app()->make(CourseController::class);
     $response = $controller->showBySlug('missing-course');
+
+    assertJsonResponsePayload($response, 404, [
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('returns course access state for authenticated user', function (): void {
+    $course = new Course;
+    $course->id = 12;
+    $course->name = 'Grammar Basics';
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')
+        ->once()
+        ->with(12)
+        ->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $cartService = \Mockery::mock(ICartService::class);
+    $cartService->shouldReceive('hasCourse')
+        ->once()
+        ->with(7, 12)
+        ->andReturnTrue();
+    app()->instance(ICartService::class, $cartService);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')
+        ->once()
+        ->with(7, 12)
+        ->andReturnFalse();
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/12/access', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $response = $controller->access($request, 12);
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'data' => [
+            'course_id' => 12,
+            'enrolled' => false,
+            'in_cart' => true,
+        ],
+    ]);
+});
+
+it('returns not found when checking access for missing course', function (): void {
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')
+        ->once()
+        ->with(12)
+        ->andReturnNull();
+    app()->instance(ICourseService::class, $service);
+
+    $cartService = \Mockery::mock(ICartService::class);
+    app()->instance(ICartService::class, $cartService);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/12/access', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $response = $controller->access($request, 12);
 
     assertJsonResponsePayload($response, 404, [
         'status' => false,
