@@ -27,6 +27,7 @@ beforeEach(function (): void {
         $table->string('status')->nullable();
         $table->integer('age')->nullable();
         $table->integer('price')->nullable();
+        $table->timestamps();
     });
 
     Schema::create('test_model_children', function (Blueprint $table): void {
@@ -43,14 +44,28 @@ afterEach(function (): void {
 });
 
 test('getAll returns all records', function (): void {
-    TestModel::query()->create(['name' => 'John', 'status' => 'active', 'age' => 25, 'price' => 15]);
-    TestModel::query()->create(['name' => 'Jane', 'status' => 'inactive', 'age' => 30, 'price' => 25]);
+    TestModel::query()->create([
+        'name' => 'John',
+        'status' => 'active',
+        'age' => 25,
+        'price' => 15,
+        'created_at' => now()->subMinute(),
+        'updated_at' => now()->subMinute(),
+    ]);
+    TestModel::query()->create([
+        'name' => 'Jane',
+        'status' => 'inactive',
+        'age' => 30,
+        'price' => 25,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
     $repository = app()->make(TestRepository::class);
     $result = $repository->getAll();
 
     expect($result)->toHaveCount(2);
-    expect($result->pluck('name')->sort()->values()->all())
+    expect($result->pluck('name')->values()->all())
         ->toEqual(['Jane', 'John']);
 });
 
@@ -68,8 +83,22 @@ test('getAll applies eager loading options', function (): void {
 });
 
 test('paginateAll returns a paginator', function (): void {
-    TestModel::query()->create(['name' => 'John', 'status' => 'active', 'age' => 25, 'price' => 15]);
-    TestModel::query()->create(['name' => 'Jane', 'status' => 'inactive', 'age' => 30, 'price' => 25]);
+    TestModel::query()->create([
+        'name' => 'John',
+        'status' => 'active',
+        'age' => 25,
+        'price' => 15,
+        'created_at' => now()->subMinute(),
+        'updated_at' => now()->subMinute(),
+    ]);
+    TestModel::query()->create([
+        'name' => 'Jane',
+        'status' => 'inactive',
+        'age' => 30,
+        'price' => 25,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
     $options = (new QueryOption)->setPage(1)->setPerPage(1);
     $repository = app()->make(TestRepository::class);
@@ -78,6 +107,7 @@ test('paginateAll returns a paginator', function (): void {
 
     expect($result)->toBeInstanceOf(LengthAwarePaginator::class);
     expect($result->items())->toHaveCount(1);
+    expect($result->items()[0]->name)->toBe('Jane');
 });
 
 test('getBy returns records matching criteria', function (): void {
@@ -451,7 +481,8 @@ class FailingDeleteModel extends TestModel
 
 class TestRepository extends Repository
 {
-    public function __construct(TestModel $model) {
+    public function __construct(TestModel $model)
+    {
         parent::__construct($model);
     }
 }
