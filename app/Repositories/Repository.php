@@ -105,6 +105,17 @@ abstract class Repository implements IRepository
      |  Query APIs
      ========================= */
 
+    public function query(array $with = []): Builder
+    {
+        $query = $this->model->newQuery();
+
+        if ($with !== []) {
+            $query->with($with);
+        }
+
+        return $this->applyDefaultOrderIfMissing($query);
+    }
+
     public function getAll(?QueryOption $options = null): Collection
     {
         $query = $this->applyQueryOption($this->model->newQuery(), $options);

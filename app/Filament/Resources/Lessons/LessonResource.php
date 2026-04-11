@@ -28,7 +28,7 @@ class LessonResource extends BaseResource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected function service(): IService
+    protected static function service(): IService
     {
         return app(ILessonService::class);
     }

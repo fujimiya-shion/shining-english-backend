@@ -2,11 +2,13 @@
 
 use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
+use App\Services\Order\IOrderService;
 use Illuminate\Database\Eloquent\Builder;
 
 test('order resource uses order model and title attribute', function (): void {
     expect(OrderResource::getModel())->toBe(Order::class);
     expect(OrderResource::getRecordTitleAttribute())->toBe('id');
+    expect(is_subclass_of(OrderResource::class, \App\Filament\Resources\BaseResource::class))->toBeTrue();
 });
 
 test('order resource defines expected pages', function (): void {
@@ -58,6 +60,14 @@ test('order resource builds query with eager loads', function (): void {
 
     $eagerLoads = $query->getEagerLoads();
     expect($eagerLoads)->toHaveKey('user');
+});
+
+test('order resource resolves the order service', function (): void {
+    $method = new ReflectionMethod(OrderResource::class, 'service');
+    $method->setAccessible(true);
+    $service = $method->invoke(null);
+
+    expect($service)->toBeInstanceOf(IOrderService::class);
 });
 
 test('order resource builds record query with item eager loads', function (): void {
