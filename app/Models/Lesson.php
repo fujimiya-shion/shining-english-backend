@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lesson extends Model
 {
-    use HasFactory, SoftDeletes, Slugable;
+    use HasFactory, Slugable, SoftDeletes;
 
     protected $attributes = [
         'star_reward_video' => 0,
@@ -51,5 +51,10 @@ class Lesson extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(LessonComment::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(LessonNote::class);
     }
 }
