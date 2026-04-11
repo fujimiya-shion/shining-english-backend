@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Enums\AuthenticatedBy;
+use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
-use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -97,10 +97,16 @@ class User extends Authenticatable implements MustVerifyEmailContract
         return $this->hasMany(LessonComment::class);
     }
 
+    public function lessonNotes(): HasMany
+    {
+        return $this->hasMany(LessonNote::class);
+    }
+
     public function setPasswordAttribute(?string $password): void
     {
         if ($password === null || $password === '') {
             $this->attributes['password'] = null;
+
             return;
         }
 
