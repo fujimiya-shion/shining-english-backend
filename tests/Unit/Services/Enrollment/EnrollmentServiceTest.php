@@ -2,8 +2,10 @@
 
 namespace Tests\Unit\Services\Enrollment;
 
+use App\Enums\OrderStatus;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Models\Order;
 use App\Models\User;
 use App\Repositories\Enrollment\EnrollmentRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
@@ -144,13 +146,127 @@ it('restores a soft deleted enrollment', function (): void {
 });
 
 it('checks enrollment status', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = null;
+
     $repository = Mockery::mock(IEnrollmentRepository::class);
     $repository->shouldReceive('findByUserAndCourse')
         ->once()
         ->with(10, 20)
-        ->andReturn(new Enrollment);
+        ->andReturn($enrollment);
 
     $service = new EnrollmentService($repository);
 
     expect($service->isEnrolled(10, 20))->toBeTrue();
+});
+
+it('returns false when enrollment does not exist', function (): void {
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturnNull();
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->isEnrolled(10, 20))->toBeFalse();
+});
+
+it('returns false when enrollment order is not paid', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = 30;
+    $enrollment->setRelation('order', new Order([
+        'status' => OrderStatus::Pending,
+    ]));
+
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturn($enrollment);
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->isEnrolled(10, 20))->toBeFalse();
+});
+
+it('returns true when enrollment order is paid', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = 30;
+    $enrollment->setRelation('order', new Order([
+        'status' => OrderStatus::Paid,
+    ]));
+
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturn($enrollment);
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->isEnrolled(10, 20))->toBeTrue();
+});
+
+it('returns true when enrollment order is pending approval', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = 30;
+    $enrollment->setRelation('order', new Order([
+        'status' => OrderStatus::Pending,
+    ]));
+
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturn($enrollment);
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->hasPendingEnrollment(10, 20))->toBeTrue();
+});
+
+it('returns false when enrollment does not exist while checking pending approval', function (): void {
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturnNull();
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
+});
+
+it('returns false when enrollment has no order while checking pending approval', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = null;
+
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturn($enrollment);
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
+});
+
+it('returns false when enrollment order is already paid while checking pending approval', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = 30;
+    $enrollment->setRelation('order', new Order([
+        'status' => OrderStatus::Paid,
+    ]));
+
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturn($enrollment);
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
 });

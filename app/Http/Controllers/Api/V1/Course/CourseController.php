@@ -70,6 +70,7 @@ class CourseController extends ApiController
         return $this->success(data: [
             'course_id' => $id,
             'enrolled' => $this->enrollmentService->isEnrolled($user->id, $id),
+            'pending_access' => $this->enrollmentService->hasPendingEnrollment($user->id, $id),
             'in_cart' => $this->cartService->hasCourse($user->id, $id),
         ]);
     }
