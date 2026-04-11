@@ -36,6 +36,11 @@ beforeEach(function (): void {
         $table->string('name')->nullable();
     });
 
+    Schema::create('test_models_without_timestamps', function (Blueprint $table): void {
+        $table->id();
+        $table->string('name')->nullable();
+    });
+
     app()->instance(TestRepository::class, new TestRepository(new TestModel));
 });
 
@@ -415,6 +420,33 @@ test('applyPrefixMatch returns query unchanged for empty term', function (): voi
     expect($result->toSql())->toBe($originalSql);
 });
 
+test('applyDefaultOrderIfMissing keeps existing order clauses', function (): void {
+    $repository = app()->make(TestRepository::class);
+    $query = TestModel::query()->orderBy('name');
+
+    $method = new ReflectionMethod(Repository::class, 'applyDefaultOrderIfMissing');
+    $method->setAccessible(true);
+
+    /** @var \Illuminate\Database\Eloquent\Builder $result */
+    $result = $method->invoke($repository, $query, new QueryOption);
+
+    expect($result->getQuery()->orders)->toHaveCount(1);
+    expect($result->getQuery()->orders[0]['column'])->toBe('name');
+});
+
+test('applyDefaultOrderIfMissing skips ordering when model table has no created_at column', function (): void {
+    $repository = new TestRepositoryWithoutTimestamps(new TestModelWithoutTimestamps);
+    $query = TestModelWithoutTimestamps::query();
+
+    $method = new ReflectionMethod(Repository::class, 'applyDefaultOrderIfMissing');
+    $method->setAccessible(true);
+
+    /** @var \Illuminate\Database\Eloquent\Builder $result */
+    $result = $method->invoke($repository, $query, new QueryOption);
+
+    expect($result->getQuery()->orders ?? [])->toBe([]);
+});
+
 test('delete returns true for existing record', function () {
     TestModel::query()->create(['id' => 3, 'name' => 'John']);
     $repository = app()->make(TestRepository::class);
@@ -459,6 +491,15 @@ class TestModelChild extends Model
     public $timestamps = false;
 }
 
+class TestModelWithoutTimestamps extends Model
+{
+    protected $table = 'test_models_without_timestamps';
+
+    protected $guarded = [];
+
+    public $timestamps = false;
+}
+
 class FailingCreateModel extends TestModel
 {
     public function create(array $attributes = []): Model
@@ -482,6 +523,14 @@ class FailingDeleteModel extends TestModel
 class TestRepository extends Repository
 {
     public function __construct(TestModel $model)
+    {
+        parent::__construct($model);
+    }
+}
+
+class TestRepositoryWithoutTimestamps extends Repository
+{
+    public function __construct(TestModelWithoutTimestamps $model)
     {
         parent::__construct($model);
     }
