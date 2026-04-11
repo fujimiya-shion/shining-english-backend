@@ -12,6 +12,7 @@ use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
 use BackedEnum;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -55,15 +56,13 @@ class OrderResource extends Resource
                             ->disabled()
                             ->dehydrated(false)
                             ->columnSpan(3),
-                        TextInput::make('user.name')
+                        Placeholder::make('user_name')
                             ->label('User')
-                            ->disabled()
-                            ->dehydrated(false)
+                            ->content(fn (?Order $record): string => $record?->user?->name ?? '-')
                             ->columnSpan(5),
-                        TextInput::make('user.email')
+                        Placeholder::make('user_email')
                             ->label('Email')
-                            ->disabled()
-                            ->dehydrated(false)
+                            ->content(fn (?Order $record): string => $record?->user?->email ?? '-')
                             ->columnSpan(4),
                         TextInput::make('total_amount')
                             ->label('Total')

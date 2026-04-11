@@ -27,8 +27,8 @@ test('order resource configures form table and infolist', function (): void {
     $formComponents = schemaComponentMap($schema);
     expect($formComponents)->toHaveKeys([
         'id',
-        'user.name',
-        'user.email',
+        'user_name',
+        'user_email',
         'total_amount',
         'status',
         'payment_method',
