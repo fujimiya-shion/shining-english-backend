@@ -2,6 +2,7 @@
 
 namespace App\Services\Enrollment;
 
+use App\Enums\OrderStatus;
 use App\Models\Enrollment;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Services\Service;
@@ -59,6 +60,27 @@ class EnrollmentService extends Service implements IEnrollmentService
 
     public function isEnrolled(int $userId, int $courseId): bool
     {
-        return (bool) $this->enrollmentRepository->findByUserAndCourse($userId, $courseId);
+        $enrollment = $this->enrollmentRepository->findByUserAndCourse($userId, $courseId);
+
+        if (! $enrollment) {
+            return false;
+        }
+
+        if (! $enrollment->order_id) {
+            return true;
+        }
+
+        return $enrollment->order?->status === OrderStatus::Paid;
+    }
+
+    public function hasPendingEnrollment(int $userId, int $courseId): bool
+    {
+        $enrollment = $this->enrollmentRepository->findByUserAndCourse($userId, $courseId);
+
+        if (! $enrollment || ! $enrollment->order_id) {
+            return false;
+        }
+
+        return $enrollment->order?->status === OrderStatus::Pending;
     }
 }

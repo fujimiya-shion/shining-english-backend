@@ -222,6 +222,10 @@ it('returns course access state for authenticated user', function (): void {
         ->once()
         ->with(7, 12)
         ->andReturnFalse();
+    $enrollmentService->shouldReceive('hasPendingEnrollment')
+        ->once()
+        ->with(7, 12)
+        ->andReturnTrue();
     app()->instance(IEnrollmentService::class, $enrollmentService);
 
     $controller = app()->make(CourseController::class);
@@ -237,6 +241,7 @@ it('returns course access state for authenticated user', function (): void {
         'data' => [
             'course_id' => 12,
             'enrolled' => false,
+            'pending_access' => true,
             'in_cart' => true,
         ],
     ]);

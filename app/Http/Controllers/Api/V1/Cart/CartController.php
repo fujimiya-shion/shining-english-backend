@@ -44,6 +44,7 @@ class CartController extends ApiController
         return $this->created([
             'course_id' => (int) $data['course_id'],
             'enrolled' => false,
+            'pending_access' => false,
             'in_cart' => true,
         ], 'Course added to cart');
     }

@@ -12,7 +12,7 @@ test('order resource uses order model and title attribute', function (): void {
 test('order resource defines expected pages', function (): void {
     $pages = OrderResource::getPages();
 
-    expect($pages)->toHaveKeys(['index', 'view']);
+    expect($pages)->toHaveKeys(['index', 'view', 'edit']);
 });
 
 test('order resource configures form table and infolist', function (): void {
@@ -23,6 +23,19 @@ test('order resource configures form table and infolist', function (): void {
     expect($schema)->toBeInstanceOf(\Filament\Schemas\Schema::class);
     expect($table)->toBeInstanceOf(\Filament\Tables\Table::class);
     expect($infolist)->toBeInstanceOf(\Filament\Schemas\Schema::class);
+
+    $formComponents = schemaComponentMap($schema);
+    expect($formComponents)->toHaveKeys([
+        'id',
+        'user.name',
+        'user.email',
+        'total_amount',
+        'status',
+        'payment_method',
+        'placed_at',
+        'created_at',
+        'updated_at',
+    ]);
 
     $components = schemaComponentMap($infolist);
     expect($components)->toHaveKeys([

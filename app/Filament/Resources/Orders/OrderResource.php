@@ -2,14 +2,21 @@
 
 namespace App\Filament\Resources\Orders;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Orders\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
 use BackedEnum;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -37,7 +44,65 @@ class OrderResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components([]);
+        return $schema
+            ->columns(1)
+            ->components([
+                Grid::make(12)
+                    ->columnSpanFull()
+                    ->schema([
+                        TextInput::make('id')
+                            ->label('Order')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpan(3),
+                        TextInput::make('user.name')
+                            ->label('User')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpan(5),
+                        TextInput::make('user.email')
+                            ->label('Email')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->columnSpan(4),
+                        TextInput::make('total_amount')
+                            ->label('Total')
+                            ->numeric()
+                            ->minValue(0)
+                            ->required()
+                            ->columnSpan(4),
+                        Select::make('status')
+                            ->options(collect(OrderStatus::cases())->mapWithKeys(
+                                static fn (OrderStatus $status): array => [$status->value => ucfirst($status->value)]
+                            )->all())
+                            ->required()
+                            ->native(false)
+                            ->columnSpan(4),
+                        Select::make('payment_method')
+                            ->label('Payment')
+                            ->options(collect(PaymentMethod::cases())->mapWithKeys(
+                                static fn (PaymentMethod $method): array => [$method->value => strtoupper($method->value)]
+                            )->all())
+                            ->required()
+                            ->native(false)
+                            ->columnSpan(4),
+                        DateTimePicker::make('placed_at')
+                            ->label('Placed At')
+                            ->seconds(false)
+                            ->required()
+                            ->columnSpan(6),
+                        DateTimePicker::make('created_at')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->seconds(false)
+                            ->columnSpan(3),
+                        DateTimePicker::make('updated_at')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->seconds(false)
+                            ->columnSpan(3),
+                    ]),
+            ]);
     }
 
     public static function infolist(Schema $schema): Schema
@@ -86,6 +151,7 @@ class OrderResource extends Resource
         return [
             'index' => ListOrders::route('/'),
             'view' => ViewOrder::route('/{record}'),
+            'edit' => EditOrder::route('/{record}/edit'),
         ];
     }
 }

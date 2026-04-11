@@ -10,4 +10,6 @@ interface IEnrollmentService extends IService
     public function enroll(int $userId, int $courseId, ?int $orderId = null): Enrollment;
 
     public function isEnrolled(int $userId, int $courseId): bool;
+
+    public function hasPendingEnrollment(int $userId, int $courseId): bool;
 }
