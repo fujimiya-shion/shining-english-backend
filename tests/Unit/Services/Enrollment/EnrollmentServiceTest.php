@@ -160,6 +160,18 @@ it('checks enrollment status', function (): void {
     expect($service->isEnrolled(10, 20))->toBeTrue();
 });
 
+it('returns false when enrollment does not exist', function (): void {
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturnNull();
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->isEnrolled(10, 20))->toBeFalse();
+});
+
 it('returns false when enrollment order is not paid', function (): void {
     $enrollment = new Enrollment;
     $enrollment->order_id = 30;
@@ -212,6 +224,33 @@ it('returns true when enrollment order is pending approval', function (): void {
     $service = new EnrollmentService($repository);
 
     expect($service->hasPendingEnrollment(10, 20))->toBeTrue();
+});
+
+it('returns false when enrollment does not exist while checking pending approval', function (): void {
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturnNull();
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
+});
+
+it('returns false when enrollment has no order while checking pending approval', function (): void {
+    $enrollment = new Enrollment;
+    $enrollment->order_id = null;
+
+    $repository = Mockery::mock(IEnrollmentRepository::class);
+    $repository->shouldReceive('findByUserAndCourse')
+        ->once()
+        ->with(10, 20)
+        ->andReturn($enrollment);
+
+    $service = new EnrollmentService($repository);
+
+    expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
 });
 
 it('returns false when enrollment order is already paid while checking pending approval', function (): void {
