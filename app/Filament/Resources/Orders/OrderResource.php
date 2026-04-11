@@ -4,26 +4,27 @@ namespace App\Filament\Resources\Orders;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Filament\Resources\Orders\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
+use App\Services\IService;
+use App\Services\Order\IOrderService;
 use BackedEnum;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
-class OrderResource extends Resource
+class OrderResource extends BaseResource
 {
     protected static ?string $model = Order::class;
 
@@ -31,16 +32,19 @@ class OrderResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'id';
 
-    public static function getEloquentQuery(): Builder
+    protected static function service(): IService
     {
-        return parent::getEloquentQuery()
-            ->with(['user']);
+        return app(IOrderService::class);
     }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
+    protected static function getListEagerLoads(): array
     {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->with(['user', 'items.course']);
+        return ['user'];
+    }
+
+    protected static function getRecordEagerLoads(): array
+    {
+        return ['user', 'items.course'];
     }
 
     public static function form(Schema $schema): Schema

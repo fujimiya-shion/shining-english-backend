@@ -74,6 +74,17 @@ test('getAll returns all records', function (): void {
         ->toEqual(['Jane', 'John']);
 });
 
+test('query builds builder with eager loads and default ordering', function (): void {
+    $repository = app()->make(TestRepository::class);
+    $query = $repository->query(['children']);
+
+    expect($query)->toBeInstanceOf(\Illuminate\Database\Eloquent\Builder::class);
+    expect($query->getEagerLoads())->toHaveKey('children');
+    expect($query->getQuery()->orders)->toHaveCount(1);
+    expect($query->getQuery()->orders[0]['column'])->toBe('test_models.created_at');
+    expect($query->getQuery()->orders[0]['direction'])->toBe('desc');
+});
+
 test('getAll applies eager loading options', function (): void {
     $parent = TestModel::query()->create(['name' => 'Parent', 'status' => 'active']);
     TestModelChild::query()->create(['test_model_id' => $parent->id, 'name' => 'Child']);

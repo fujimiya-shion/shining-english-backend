@@ -27,14 +27,16 @@ use App\Repositories\Star\IStarRepository;
 use App\Repositories\Star\StarRepository;
 use App\Repositories\StarTransaction\IStarTransactionRepository;
 use App\Repositories\StarTransaction\StarTransactionRepository;
-use App\Repositories\UserQuizAttempt\IUserQuizAttemptRepository;
-use App\Repositories\UserQuizAttempt\UserQuizAttemptRepository;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
 use App\Repositories\User\UserDeviceRepository;
 use App\Repositories\User\UserRepository;
+use App\Repositories\UserQuizAttempt\IUserQuizAttemptRepository;
+use App\Repositories\UserQuizAttempt\UserQuizAttemptRepository;
 use App\Services\Cart\CartService;
 use App\Services\Cart\ICartService;
+use App\Services\Category\CategoryService;
+use App\Services\Category\ICategoryService;
 use App\Services\Course\CourseService;
 use App\Services\Course\ICourseService;
 use App\Services\Developer\DeveloperService;
@@ -53,12 +55,12 @@ use App\Services\Star\IStarService;
 use App\Services\Star\StarService;
 use App\Services\StarTransaction\IStarTransactionService;
 use App\Services\StarTransaction\StarTransactionService;
-use App\Services\UserQuizAttempt\IUserQuizAttemptService;
-use App\Services\UserQuizAttempt\UserQuizAttemptService;
 use App\Services\User\IUserDeviceService;
 use App\Services\User\IUserService;
 use App\Services\User\UserDeviceService;
 use App\Services\User\UserService;
+use App\Services\UserQuizAttempt\IUserQuizAttemptService;
+use App\Services\UserQuizAttempt\UserQuizAttemptService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -84,6 +86,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IDeveloperRepository::class, DeveloperRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
+        $this->app->bind(ICategoryService::class, CategoryService::class);
         $this->app->bind(IEnrollmentService::class, EnrollmentService::class);
         $this->app->bind(IOrderService::class, OrderService::class);
         $this->app->bind(IOrderItemService::class, OrderItemService::class);
@@ -97,7 +100,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserDeviceService::class, UserDeviceService::class);
         $this->app->bind(IDeveloperService::class, DeveloperService::class);
 
-        $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy());
+        $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy);
     }
 
     /**
