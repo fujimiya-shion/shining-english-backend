@@ -24,6 +24,27 @@ function createLessonNoteFixture(): Lesson
     ]);
 }
 
+it('lesson not found', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('lesson-note')->plainTextToken;
+    $notfoundLessonId = 999;
+
+    $response = $this->postJson("/api/v1/lessons/{$notfoundLessonId}/notes", [
+        'content' => 'Comment in notfound lesson',
+    ], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(404);
+    $response->assertJsonFragment([
+        'message' => 'Lesson not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+
+    expect(LessonNote::query()->count())->toBe(0);
+});
+
 it('creates a lesson note for the current user', function (): void {
     $user = User::factory()->create();
     $token = $user->createToken('lesson-note')->plainTextToken;
