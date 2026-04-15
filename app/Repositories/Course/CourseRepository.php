@@ -15,8 +15,7 @@ class CourseRepository extends Repository implements ICourseRepository
     public function __construct(
         Course $model,
         protected ICategoryRepository $categoryRepository
-    )
-    {
+    ) {
         $this->model = $model;
     }
 
@@ -38,6 +37,8 @@ class CourseRepository extends Repository implements ICourseRepository
                         'course_id',
                         'group_name',
                         'video_url',
+                        'documents',
+                        'document_names',
                         'description',
                         'duration_minutes',
                         'has_quiz',

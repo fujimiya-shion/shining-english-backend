@@ -8,6 +8,7 @@ use App\Models\Lesson;
 use App\Models\Quiz;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -139,5 +140,47 @@ it('returns quiz data for lesson quiz endpoint', function (): void {
         'status' => true,
         'status_code' => 200,
         'data' => ['id' => 1],
+    ]);
+});
+
+it('downloads lesson document by index', function (): void {
+    Storage::fake('local');
+    Storage::disk('local')->put('lesson-documents/grammar-guide.pdf', 'pdf-content');
+
+    $lesson = new Lesson([
+        'documents' => ['lesson-documents/grammar-guide.pdf'],
+        'document_names' => ['grammar-guide.pdf'],
+    ]);
+    $lesson->id = 10;
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->downloadDocument(10, 0);
+
+    expect($response->getStatusCode())->toBe(200);
+    expect($response->headers->get('content-disposition'))->toContain('grammar-guide.pdf');
+});
+
+it('returns not found when lesson document index is invalid', function (): void {
+    $lesson = new Lesson([
+        'documents' => ['lesson-documents/grammar-guide.pdf'],
+        'document_names' => ['grammar-guide.pdf'],
+    ]);
+    $lesson->id = 10;
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->downloadDocument(10, 1);
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
     ]);
 });

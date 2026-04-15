@@ -6,6 +6,7 @@ use App\Util\Video\VideoMetadataReader;
 use App\Util\Php\PhpUploadLimit;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -46,9 +47,17 @@ class LessonForm
                             ->placeholder('VD: Fundamentals of English')
                             ->columnSpan(6),
                         FileUpload::make('video_url')
+                            ->key('lesson-video-upload')
                             ->label('Video')
                             ->required()
-                            ->acceptedFileTypes(['video/*'])
+                            ->acceptedFileTypes([
+                                'video/mp4',
+                                'video/quicktime',
+                                'video/x-msvideo',
+                                'video/x-ms-wmv',
+                                'video/x-matroska',
+                                'video/webm',
+                            ])
                             ->maxSize(PhpUploadLimit::maxKilobytes())
                             ->disk('local')
                             ->directory('lessons')
@@ -76,6 +85,46 @@ class LessonForm
 
                                 $set('duration_minutes', $minutes);
                             }),
+                        FileUpload::make('documents')
+                            ->key('lesson-documents-upload')
+                            ->label('Tài liệu bài học')
+                            ->acceptedFileTypes([
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'application/vnd.ms-excel',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-powerpoint',
+                                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                'text/plain',
+                                'application/zip',
+                                'application/x-zip-compressed',
+                            ])
+                            ->rules([
+                                'mimetypes:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,application/zip,application/x-zip-compressed',
+                            ])
+                            ->maxSize(PhpUploadLimit::maxKilobytes())
+                            ->disk('local')
+                            ->directory('lesson-documents')
+                            ->multiple()
+                            ->reorderable()
+                            ->appendFiles()
+                            ->downloadable()
+                            ->openable()
+                            ->storeFileNamesIn('document_names')
+                            ->helperText('Upload tài liệu đính kèm cho bài học. Có thể kéo thả để đổi thứ tự.')
+                            ->columnSpan(8),
+                        KeyValue::make('document_names')
+                            ->label('Tên hiển thị tài liệu')
+                            ->keyLabel('File đã upload')
+                            ->valueLabel('Tên hiển thị')
+                            ->editableKeys(false)
+                            ->editableValues(true)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->reorderable(false)
+                            ->helperText('Mặc định dùng tên file gốc. Có thể sửa tên hiển thị hoặc tên tải xuống tại đây.')
+                            ->columnSpan(4),
                         TextInput::make('duration_minutes')
                             ->label('Duration (minutes)')
                             ->numeric()
