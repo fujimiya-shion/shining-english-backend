@@ -22,6 +22,8 @@ it('defines fillable attributes', function (): void {
         'course_id',
         'group_name',
         'video_url',
+        'documents',
+        'document_names',
         'description',
         'duration_minutes',
         'star_reward_video',
@@ -64,6 +66,24 @@ it('defines casts for lesson attributes', function (): void {
     expect($model->getCasts())->toMatchArray([
         'has_quiz' => 'boolean',
         'duration_minutes' => 'integer',
+        'documents' => 'array',
+        'document_names' => 'array',
+    ]);
+});
+
+it('appends the original extension when document display name is renamed without one', function (): void {
+    $lesson = new Lesson;
+
+    $lesson->document_names = [
+        'lesson-documents/01KI/bien-lai-mau.docx' => 'lesson-1',
+        'lesson-documents/01KI/grammar-guide.pdf' => 'grammar-guide.pdf',
+        'lesson-documents/01KI/practice.txt' => '',
+    ];
+
+    expect($lesson->document_names)->toBe([
+        'lesson-documents/01KI/bien-lai-mau.docx' => 'lesson-1.docx',
+        'lesson-documents/01KI/grammar-guide.pdf' => 'grammar-guide.pdf',
+        'lesson-documents/01KI/practice.txt' => 'practice.txt',
     ]);
 });
 

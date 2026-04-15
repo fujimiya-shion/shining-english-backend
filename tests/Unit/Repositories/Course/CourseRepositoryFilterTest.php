@@ -274,6 +274,8 @@ it('loads reviews and lesson comments when getting course by slug', function ():
         'course_id' => $course->id,
         'group_name' => 'Fundamentals',
         'video_url' => 'lessons/example.mp4',
+        'documents' => ['lesson-documents/grammar-guide.pdf'],
+        'document_names' => ['grammar-guide.pdf'],
         'description' => 'Lesson description',
         'duration_minutes' => 12,
         'star_reward_video' => 1,
@@ -306,6 +308,8 @@ it('loads reviews and lesson comments when getting course by slug', function ():
     expect($result?->reviews->first()?->relationLoaded('user'))->toBeTrue();
     expect($result?->reviews->first()?->user?->name)->toBe('Ha Linh');
     expect($result?->relationLoaded('lessons'))->toBeTrue();
+    expect($result?->lessons->first()?->documents)->toBe(['lesson-documents/grammar-guide.pdf']);
+    expect($result?->lessons->first()?->document_names)->toBe(['grammar-guide.pdf']);
     expect($result?->lessons->first()?->relationLoaded('comments'))->toBeTrue();
     expect($result?->lessons->first()?->comments->count())->toBe(1);
     expect($result?->lessons->first()?->comments->first()?->relationLoaded('user'))->toBeTrue();

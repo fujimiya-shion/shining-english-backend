@@ -26,6 +26,8 @@ class Lesson extends Model
         'course_id',
         'group_name',
         'video_url',
+        'documents',
+        'document_names',
         'description',
         'duration_minutes',
         'star_reward_video',
@@ -36,7 +38,48 @@ class Lesson extends Model
     protected $casts = [
         'has_quiz' => 'boolean',
         'duration_minutes' => 'integer',
+        'documents' => 'array',
+        'document_names' => 'array',
     ];
+
+    public function setDocumentNamesAttribute(?array $value): void
+    {
+        if ($value === null) {
+            $this->attributes['document_names'] = null;
+
+            return;
+        }
+
+        $normalized = [];
+
+        foreach ($value as $path => $name) {
+            if (! is_string($path)) {
+                continue;
+            }
+
+            $fallbackName = basename($path);
+            $displayName = is_string($name) ? trim($name) : '';
+
+            if ($displayName === '') {
+                $normalized[$path] = $fallbackName;
+
+                continue;
+            }
+
+            $extension = pathinfo($fallbackName, PATHINFO_EXTENSION);
+
+            if (
+                $extension !== ''
+                && strtolower(pathinfo($displayName, PATHINFO_EXTENSION)) !== strtolower($extension)
+            ) {
+                $displayName .= ".{$extension}";
+            }
+
+            $normalized[$path] = $displayName;
+        }
+
+        $this->attributes['document_names'] = json_encode($normalized);
+    }
 
     public function course(): BelongsTo
     {
