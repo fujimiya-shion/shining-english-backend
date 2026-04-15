@@ -88,6 +88,12 @@ it('defines lesson comments relation', function (): void {
     expect($user->lessonComments())->toBeInstanceOf(HasMany::class);
 });
 
+it('defines lesson notes relation', function (): void {
+    $user = new User;
+
+    expect($user->lessonNotes())->toBeInstanceOf(HasMany::class);
+});
+
 it('hashes password when setting it', function (): void {
     $user = new User;
     $user->password = 'secret';
