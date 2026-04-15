@@ -9,6 +9,7 @@ test('video metadata reader returns null when relative path is empty', function 
     $reader = new VideoMetadataReader;
 
     expect($reader->detectDurationMinutes(null))->toBeNull();
+    expect($reader->detectDurationMinutes(''))->toBeNull();
 });
 
 test('video metadata reader returns null when disk resolution fails', function (): void {
@@ -66,6 +67,40 @@ test('video metadata reader converts playtime seconds into minutes', function ()
     file_put_contents($path, 'stub');
 
     expect($reader->detectDurationMinutesFromAbsolutePath($path))->toBe(2);
+
+    @unlink($path);
+});
+
+test('video metadata reader returns null when playtime seconds are not positive', function (): void {
+    $reader = new class extends VideoMetadataReader
+    {
+        protected function analyzeFile(string $absolutePath): array
+        {
+            return ['playtime_seconds' => 0];
+        }
+    };
+
+    $path = tempnam(sys_get_temp_dir(), 'reader-');
+    file_put_contents($path, 'stub');
+
+    expect($reader->detectDurationMinutesFromAbsolutePath($path))->toBeNull();
+
+    @unlink($path);
+});
+
+test('video metadata reader rounds up numeric string playtime to at least one minute', function (): void {
+    $reader = new class extends VideoMetadataReader
+    {
+        protected function analyzeFile(string $absolutePath): array
+        {
+            return ['playtime_seconds' => '1'];
+        }
+    };
+
+    $path = tempnam(sys_get_temp_dir(), 'reader-');
+    file_put_contents($path, 'stub');
+
+    expect($reader->detectDurationMinutesFromAbsolutePath($path))->toBe(1);
 
     @unlink($path);
 });

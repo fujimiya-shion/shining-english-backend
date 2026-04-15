@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Cart\CartController;
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Controllers\Api\V1\Developer\DeveloperController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
+use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
 use App\Http\Controllers\Api\V1\QuizAttempt\QuizAttemptController;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
 use App\Http\Controllers\Api\V1\User\AuthController;
@@ -33,7 +34,7 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/slug/{slug}', 'showBySlug');
                 Route::get('/{id}', 'show');
             });
-    
+
         Route::controller(LessonController::class)
             ->prefix('/lessons')
             ->group(function () {
@@ -41,7 +42,7 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/{id}', 'show');
                 Route::get('/{id}/quiz', 'quiz');
             });
-    
+
         Route::controller(AuthController::class)
             ->prefix('/auth')
             ->group(function () {
@@ -51,7 +52,7 @@ Route::prefix('/v1')->group(function () {
                 Route::post('/forgot-password', 'forgotPassword');
                 Route::post('/reset-password', 'resetPassword');
             });
-    
+
         Route::middleware(VerifyUserToken::class)
             ->controller(AuthController::class)
             ->prefix('/auth')
@@ -59,19 +60,35 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/me', 'me');
                 Route::post('/logout', 'logout');
             });
-    
+
         Route::middleware(VerifyUserToken::class)
             ->controller(UserController::class)
             ->prefix('/user')
             ->group(function () {
                 Route::post('/update', 'update');
             });
-    
+
         Route::middleware(VerifyUserToken::class)
             ->controller(CourseController::class)
             ->prefix('/courses')
             ->group(function () {
                 Route::get('/{id}/access', 'access');
+            });
+
+        Route::middleware(VerifyUserToken::class)
+            ->controller(LessonNoteController::class)
+            ->prefix('/lessons')
+            ->group(function () {
+                Route::get('/{id}/notes', 'indexByLesson');
+                Route::post('/{id}/notes', 'store');
+            });
+
+        Route::middleware(VerifyUserToken::class)
+            ->controller(LessonNoteController::class)
+            ->prefix('/notes')
+            ->group(function () {
+                Route::get('/', 'index');
+                Route::delete('/{id}', 'delete');
             });
 
         Route::middleware(VerifyUserToken::class)
@@ -82,7 +99,7 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/latest', 'latest');
                 Route::post('/', 'store');
             });
-    
+
         Route::middleware(VerifyUserToken::class)
             ->controller(CartController::class)
             ->prefix('/cart')
@@ -92,7 +109,7 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/count', 'count');
                 Route::delete('/clear', 'clear');
             });
-    
+
         Route::middleware(VerifyUserToken::class)
             ->controller(OrderController::class)
             ->prefix('/orders')

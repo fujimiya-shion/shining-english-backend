@@ -50,3 +50,25 @@ it('defines comments relation', function (): void {
     expect($method->getReturnType()?->getName())->toBe(HasMany::class);
     expect((new Lesson)->comments())->toBeInstanceOf(HasMany::class);
 });
+
+it('defines notes relation', function (): void {
+    $method = new ReflectionMethod(Lesson::class, 'notes');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Lesson)->notes())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines casts for lesson attributes', function (): void {
+    $model = new Lesson;
+
+    expect($model->getCasts())->toMatchArray([
+        'has_quiz' => 'boolean',
+        'duration_minutes' => 'integer',
+    ]);
+});
+
+it('uses soft deletes', function (): void {
+    $model = new Lesson;
+
+    expect(method_exists($model, 'trashed'))->toBeTrue();
+});
