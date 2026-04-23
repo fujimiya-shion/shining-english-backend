@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Courses\RelationManagers;
 
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Models\Lesson;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -13,10 +14,10 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 
 class LessonsRelationManager extends RelationManager
@@ -37,21 +38,6 @@ class LessonsRelationManager extends RelationManager
                 ->orderBy('lesson_order')
                 ->orderBy('id'))
             ->columns([
-                TextInputColumn::make('group_order')
-                    ->label('Group Order')
-                    ->type('number')
-                    ->inputMode('numeric')
-                    ->rules(['required', 'integer', 'min:1'])
-                    ->width('8rem')
-                    ->sortable()
-                    ->afterStateUpdated(function (Lesson $record, mixed $state): void {
-                        $groupOrder = max(1, (int) $state);
-
-                        Lesson::withTrashed()
-                            ->where('course_id', $record->course_id)
-                            ->where('group_name', $record->group_name)
-                            ->update(['group_order' => $groupOrder]);
-                    }),
                 TextColumn::make('lesson_order')
                     ->label('#')
                     ->sortable(),
@@ -82,7 +68,52 @@ class LessonsRelationManager extends RelationManager
                 TernaryFilter::make('has_quiz'),
                 TrashedFilter::make(),
             ])
+            ->reorderRecordsTriggerAction(
+                fn (Action $action): Action => $action
+                    ->label('Reorder Lessons')
+                    ->button()
+            )
             ->reorderable('lesson_order')
+            ->afterReordering(function (array $order): void {
+                $courseId = (int) $this->getOwnerRecord()->id;
+                $orderedIds = collect($order)->map(fn (mixed $id): int => (int) $id)->values();
+
+                if ($orderedIds->isEmpty()) {
+                    return;
+                }
+
+                /** @var Collection<int, Lesson> $lessons */
+                $lessons = Lesson::query()
+                    ->where('course_id', $courseId)
+                    ->whereIn('id', $orderedIds->all())
+                    ->get()
+                    ->keyBy('id');
+
+                $groupOrderMap = [];
+                $lessonOrderInGroup = [];
+                $nextGroupOrder = 1;
+
+                foreach ($orderedIds as $lessonId) {
+                    $lesson = $lessons->get($lessonId);
+                    if (! $lesson) {
+                        continue;
+                    }
+
+                    $groupName = trim((string) ($lesson->group_name ?? ''));
+
+                    if (! array_key_exists($groupName, $groupOrderMap)) {
+                        $groupOrderMap[$groupName] = $nextGroupOrder++;
+                        $lessonOrderInGroup[$groupName] = 1;
+                    }
+
+                    $lesson->update([
+                        'group_order' => $groupOrderMap[$groupName],
+                        'lesson_order' => $lessonOrderInGroup[$groupName],
+                    ]);
+
+                    $lessonOrderInGroup[$groupName]++;
+                }
+            })
             ->headerActions([
                 CreateAction::make()
                     ->mutateDataUsing(function (array $data): array {
