@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Requests\Api\V1\Cart\CartStoreRequest;
+use App\Http\Requests\Api\V1\Course\CourseCurrentLessonRequest;
 use App\Http\Requests\Api\V1\Developer\DeveloperLoginRequest;
 use App\Http\Requests\Api\V1\QuizAttempt\QuizAttemptStoreRequest;
 use App\Http\Requests\Api\V1\Transaction\OrderStoreRequest;
@@ -63,5 +64,19 @@ it('defines expected order store request rules and messages', function (): void 
         'course_id.integer' => 'Course id must be an integer.',
         'quantity.integer' => 'Quantity must be an integer.',
         'quantity.min' => 'Quantity must be at least 1.',
+    ]);
+});
+
+it('defines expected course current lesson request rules and messages', function (): void {
+    $request = new CourseCurrentLessonRequest;
+
+    expect($request->authorize())->toBeTrue();
+    expect($request->rules())->toBe([
+        'lesson_id' => ['required', 'integer', 'min:1'],
+    ]);
+    expect($request->messages())->toBe([
+        'lesson_id.required' => 'Lesson is required.',
+        'lesson_id.integer' => 'Lesson must be an integer.',
+        'lesson_id.min' => 'Lesson must be at least 1.',
     ]);
 });

@@ -35,7 +35,10 @@ class CourseRepository extends Repository implements ICourseRepository
                         'name',
                         'slug',
                         'course_id',
+                        'lesson_group_id',
                         'group_name',
+                        'group_order',
+                        'lesson_order',
                         'video_url',
                         'documents',
                         'document_names',
@@ -51,7 +54,8 @@ class CourseRepository extends Repository implements ICourseRepository
                             ->with(['user:id,name,avatar'])
                             ->orderByDesc('created_at'),
                     ])
-                    ->orderBy('group_name')
+                    ->orderBy('group_order')
+                    ->orderBy('lesson_order')
                     ->orderBy('id'),
             ])
             ->where('status', true)

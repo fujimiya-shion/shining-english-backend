@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Lessons\Schemas;
 
+use App\Models\LessonGroup;
 use App\Util\Video\VideoMetadataReader;
 use App\Util\Php\PhpUploadLimit;
 use Filament\Forms\Components\Select;
@@ -18,7 +19,11 @@ use Filament\Schemas\Schema;
 
 class LessonForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(
+        Schema $schema,
+        bool $withCourseField = true,
+        ?int $fixedCourseId = null
+    ): Schema
     {
         return $schema
             ->columns(1)
@@ -35,17 +40,77 @@ class LessonForm
                             ->unique(ignoreRecord: true)
                             ->helperText('Leave empty to auto-generate from name.')
                             ->columnSpan(4),
-                        Select::make('course_id')
-                            ->relationship('course', 'name')
+                        ...($withCourseField ? [
+                            Select::make('course_id')
+                                ->relationship('course', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                ->required()
+                                ->afterStateUpdated(fn (Set $set): mixed => $set('lesson_group_id', null))
+                                ->columnSpan(6),
+                        ] : []),
+                        Select::make('lesson_group_id')
+                            ->label('Group')
+                            ->disabled(fn (Get $get): bool => ($fixedCourseId ?? (int) ($get('course_id') ?? 0)) <= 0)
+                            ->options(function (Get $get) use ($fixedCourseId): array {
+                                $courseId = $fixedCourseId ?? (int) ($get('course_id') ?? 0);
+                                if ($courseId <= 0) {
+                                    return [];
+                                }
+
+                                return LessonGroup::query()
+                                    ->where('course_id', $courseId)
+                                    ->orderBy('sort_order')
+                                    ->pluck('name', 'id')
+                                    ->all();
+                            })
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->columnSpan(6),
-                        TextInput::make('group_name')
-                            ->label('Group')
-                            ->maxLength(255)
-                            ->placeholder('VD: Fundamentals of English')
-                            ->columnSpan(6),
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('Group Name')
+                                    ->required()
+                                    ->maxLength(255),
+                            ])
+                            ->createOptionUsing(function (array $data, Get $get) use ($fixedCourseId): int {
+                                $courseId = $fixedCourseId ?? (int) ($get('course_id') ?? 0);
+
+                                if ($courseId <= 0) {
+                                    return 0;
+                                }
+
+                                $name = trim((string) ($data['name'] ?? ''));
+
+                                $existing = LessonGroup::query()
+                                    ->where('course_id', $courseId)
+                                    ->where('name', $name)
+                                    ->first();
+
+                                if ($existing) {
+                                    return (int) $existing->id;
+                                }
+
+                                $group = LessonGroup::query()->create([
+                                    'course_id' => $courseId,
+                                    'name' => $name,
+                                    'sort_order' => ((int) LessonGroup::query()
+                                        ->where('course_id', $courseId)
+                                        ->max('sort_order')) + 1,
+                                ]);
+
+                                return (int) $group->id;
+                            })
+                            ->helperText('Manage groups in Course detail > Lesson Groups.')
+                            ->columnSpan($withCourseField ? 4 : 8),
+                        TextInput::make('lesson_order')
+                            ->label('Lesson Order')
+                            ->numeric()
+                            ->minValue(1)
+                            ->nullable()
+                            ->helperText('Leave empty to auto-set as max + 1 in the selected group.')
+                            ->columnSpan($withCourseField ? 2 : 4),
                         FileUpload::make('video_url')
                             ->key('lesson-video-upload')
                             ->label('Video')

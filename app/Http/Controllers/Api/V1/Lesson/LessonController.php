@@ -9,6 +9,8 @@ use App\Traits\ApiBehaviour;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LessonController extends ApiController
@@ -67,5 +69,28 @@ class LessonController extends ApiController
         }
 
         return Storage::disk('local')->download($path, $fileName);
+    }
+
+    public function video(int $id): JsonResponse|BinaryFileResponse
+    {
+        $lesson = $this->service->getById($id);
+
+        if (! $lesson) {
+            return $this->notfound();
+        }
+
+        $path = is_string($lesson->video_url ?? null) ? trim($lesson->video_url) : '';
+        if ($path === '' || ! Storage::disk('local')->exists($path)) {
+            return $this->notfound();
+        }
+
+        $response = new BinaryFileResponse(Storage::disk('local')->path($path));
+        $response->headers->set('Accept-Ranges', 'bytes');
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_INLINE,
+            basename($path),
+        );
+
+        return $response;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Course\CourseController;
+use App\Http\Requests\Api\V1\Course\CourseCurrentLessonRequest;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
 use App\Models\Course;
 use App\Models\User;
@@ -273,5 +274,190 @@ it('returns not found when checking access for missing course', function (): voi
     assertJsonResponsePayload($response, 404, [
         'status' => false,
         'status_code' => 404,
+    ]);
+});
+
+it('returns learning progress for enrolled user', function (): void {
+    $course = new Course;
+    $course->id = 12;
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')
+        ->once()
+        ->with(12)
+        ->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')
+        ->once()
+        ->with(7, 12)
+        ->andReturnTrue();
+    $enrollmentService->shouldReceive('getLearningProgress')
+        ->once()
+        ->with(7, 12)
+        ->andReturn([
+            'course_id' => 12,
+            'current_lesson_id' => 100,
+            'completed_lesson_ids' => [99],
+            'total_lessons' => 2,
+            'progress_percentage' => 50.0,
+        ]);
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    app()->instance(ICartService::class, \Mockery::mock(ICartService::class));
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/12/learning-progress', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $response = $controller->learningProgress($request, 12);
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'data' => [
+            'course_id' => 12,
+            'current_lesson_id' => 100,
+            'completed_lesson_ids' => [99],
+            'total_lessons' => 2,
+            'progress_percentage' => 50.0,
+        ],
+    ]);
+});
+
+it('returns unauthorized for learning progress when user is not enrolled', function (): void {
+    $course = new Course;
+    $course->id = 12;
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')->once()->with(12)->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->once()->with(7, 12)->andReturnFalse();
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    app()->instance(ICartService::class, \Mockery::mock(ICartService::class));
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/12/learning-progress', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $response = $controller->learningProgress($request, 12);
+
+    assertJsonResponsePayload($response, 401, [
+        'message' => 'Course access denied',
+        'status' => false,
+        'status_code' => 401,
+    ]);
+});
+
+it('completes lesson and returns next lesson metadata', function (): void {
+    $course = new Course;
+    $course->id = 12;
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')->once()->with(12)->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->once()->with(7, 12)->andReturnTrue();
+    $enrollmentService->shouldReceive('completeLesson')
+        ->once()
+        ->with(7, 12, 100)
+        ->andReturn([
+            'course_id' => 12,
+            'current_lesson_id' => 101,
+            'completed_lesson_ids' => [100],
+            'total_lessons' => 2,
+            'progress_percentage' => 50.0,
+            'next_lesson' => [
+                'id' => 101,
+                'has_quiz' => true,
+            ],
+        ]);
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    app()->instance(ICartService::class, \Mockery::mock(ICartService::class));
+
+    $controller = app()->make(CourseController::class);
+    $request = Request::create('/api/v1/courses/12/lessons/100/complete', 'POST');
+    $request->setUserResolver(fn () => $user);
+
+    $response = $controller->completeLesson($request, 12, 100);
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'data' => [
+            'course_id' => 12,
+            'current_lesson_id' => 101,
+            'completed_lesson_ids' => [100],
+            'total_lessons' => 2,
+            'progress_percentage' => 50.0,
+            'next_lesson' => [
+                'id' => 101,
+                'has_quiz' => true,
+            ],
+        ],
+    ]);
+});
+
+it('updates current lesson for enrolled user', function (): void {
+    $course = new Course;
+    $course->id = 12;
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')->once()->with(12)->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->once()->with(7, 12)->andReturnTrue();
+    $enrollmentService->shouldReceive('setCurrentLesson')
+        ->once()
+        ->with(7, 12, 101)
+        ->andReturn([
+            'course_id' => 12,
+            'current_lesson_id' => 101,
+            'completed_lesson_ids' => [100],
+            'total_lessons' => 2,
+            'progress_percentage' => 50.0,
+        ]);
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    app()->instance(ICartService::class, \Mockery::mock(ICartService::class));
+
+    $controller = app()->make(CourseController::class);
+    $request = CourseCurrentLessonRequest::create('/api/v1/courses/12/current-lesson', 'POST', [
+        'lesson_id' => 101,
+    ]);
+    $request->setContainer(app())->setRedirector(app('redirect'));
+    $request->setUserResolver(fn () => $user);
+    $request->validateResolved();
+
+    $response = $controller->setCurrentLesson($request, 12);
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'data' => [
+            'course_id' => 12,
+            'current_lesson_id' => 101,
+            'completed_lesson_ids' => [100],
+            'total_lessons' => 2,
+            'progress_percentage' => 50.0,
+        ],
     ]);
 });
