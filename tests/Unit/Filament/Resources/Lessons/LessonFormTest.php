@@ -4,6 +4,7 @@ use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Models\Lesson;
 use App\Util\Video\VideoMetadataReader;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -15,12 +16,14 @@ test('lesson form defines expected components', function (): void {
 
     $components = schemaComponentMap($schema);
 
-    expect(array_keys($components))->toEqual([
+    expect($components)->toHaveKeys([
         'name',
         'slug',
         'course_id',
         'group_name',
         'video_url',
+        'documents',
+        'document_names',
         'duration_minutes',
         'description',
         'star_reward_video',
@@ -33,6 +36,8 @@ test('lesson form defines expected components', function (): void {
     expect($components['slug'])->toBeInstanceOf(TextInput::class);
     expect($components['course_id'])->toBeInstanceOf(Select::class);
     expect($components['video_url'])->toBeInstanceOf(FileUpload::class);
+    expect($components['documents'])->toBeInstanceOf(FileUpload::class);
+    expect($components['document_names'])->toBeInstanceOf(KeyValue::class);
     expect($components['star_reward_video'])->toBeInstanceOf(TextInput::class);
     expect($components['star_reward_quiz'])->toBeInstanceOf(TextInput::class);
     expect($components['has_quiz'])->toBeInstanceOf(Toggle::class);

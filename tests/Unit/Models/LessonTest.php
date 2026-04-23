@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 test('lesson model defaults star rewards to zero', function (): void {
-    $lesson = new Lesson();
+    $lesson = new Lesson;
 
     expect($lesson->star_reward_video)->toBe(0);
     expect($lesson->star_reward_quiz)->toBe(0);
@@ -22,6 +22,8 @@ it('defines fillable attributes', function (): void {
         'course_id',
         'group_name',
         'video_url',
+        'documents',
+        'document_names',
         'description',
         'duration_minutes',
         'star_reward_video',
@@ -64,6 +66,81 @@ it('defines casts for lesson attributes', function (): void {
     expect($model->getCasts())->toMatchArray([
         'has_quiz' => 'boolean',
         'duration_minutes' => 'integer',
+        'documents' => 'array',
+        'document_names' => 'array',
+    ]);
+});
+
+it('appends the original extension when document display name is renamed without one', function (): void {
+    $lesson = new Lesson;
+
+    $lesson->document_names = [
+        'lesson-documents/01KI/bien-lai-mau.docx' => 'lesson-1',
+        'lesson-documents/01KI/grammar-guide.pdf' => 'grammar-guide.pdf',
+        'lesson-documents/01KI/practice.txt' => '',
+    ];
+
+    expect($lesson->document_names)->toBe([
+        'lesson-documents/01KI/bien-lai-mau.docx' => 'lesson-1.docx',
+        'lesson-documents/01KI/grammar-guide.pdf' => 'grammar-guide.pdf',
+        'lesson-documents/01KI/practice.txt' => 'practice.txt',
+    ]);
+});
+
+it('keeps list-based document names and infers extension from document path', function (): void {
+    $lesson = new Lesson;
+    $lesson->documents = [
+        'lesson-documents/01KI/bien-lai-mau.docx',
+        'lesson-documents/01KI/grammar-guide.pdf',
+        'lesson-documents/01KI/practice.txt',
+    ];
+
+    $lesson->document_names = [
+        'lesson-1',
+        'grammar-guide.pdf',
+        '',
+    ];
+
+    expect($lesson->document_names)->toBe([
+        'lesson-1.docx',
+        'grammar-guide.pdf',
+        'practice.txt',
+    ]);
+});
+
+it('sets document names to null when assigned null', function (): void {
+    $lesson = new Lesson;
+    $lesson->document_names = null;
+
+    expect($lesson->document_names)->toBeNull();
+});
+
+it('skips invalid list values and empty fallback names in document names list', function (): void {
+    $lesson = new Lesson;
+    $lesson->documents = ['lesson-documents/01KI/grammar-guide.pdf'];
+
+    $lesson->document_names = [
+        'grammar-guide',
+        '',
+        123,
+        'custom-name',
+    ];
+
+    expect($lesson->document_names)->toBe([
+        'grammar-guide.pdf',
+        'custom-name',
+    ]);
+});
+
+it('ignores non-string keys when document names use map format', function (): void {
+    $lesson = new Lesson;
+    $lesson->document_names = [
+        123 => 'numeric-key-name',
+        'lesson-documents/01KI/grammar-guide.pdf' => 'grammar-guide',
+    ];
+
+    expect($lesson->document_names)->toBe([
+        'lesson-documents/01KI/grammar-guide.pdf' => 'grammar-guide.pdf',
     ]);
 });
 
