@@ -220,3 +220,60 @@ it('falls back to basename when document name at index is empty', function (): v
     expect($response->getStatusCode())->toBe(200);
     expect($response->headers->get('content-disposition'))->toContain('grammar-guide.pdf');
 });
+
+it('returns not found when streaming video for missing lesson', function (): void {
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn(null);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->video(10);
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('returns not found when lesson video path is invalid', function (): void {
+    $lesson = new Lesson([
+        'video_url' => 'lessons/missing.mp4',
+    ]);
+    $lesson->id = 10;
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->video(10);
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('streams lesson video inline', function (): void {
+    Storage::fake('local');
+    Storage::disk('local')->put('lessons/sample.mp4', 'video-content');
+
+    $lesson = new Lesson([
+        'video_url' => 'lessons/sample.mp4',
+    ]);
+    $lesson->id = 10;
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->video(10);
+
+    expect($response->getStatusCode())->toBe(200);
+    expect((string) $response->headers->get('accept-ranges'))->toBe('bytes');
+    expect((string) $response->headers->get('content-disposition'))->toContain('inline');
+    expect((string) $response->headers->get('content-disposition'))->toContain('sample.mp4');
+});
