@@ -108,8 +108,8 @@ class LessonForm
                             ->label('Lesson Order')
                             ->numeric()
                             ->minValue(1)
-                            ->default(1)
-                            ->required()
+                            ->nullable()
+                            ->helperText('Leave empty to auto-set as max + 1 in the selected group.')
                             ->columnSpan($withCourseField ? 2 : 4),
                         FileUpload::make('video_url')
                             ->key('lesson-video-upload')

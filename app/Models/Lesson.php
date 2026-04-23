@@ -54,6 +54,10 @@ class Lesson extends Model
     {
         static::saving(function (Lesson $lesson): void {
             if (! $lesson->lesson_group_id) {
+                if ((int) ($lesson->lesson_order ?? 0) <= 0) {
+                    $lesson->lesson_order = self::computeNextLessonOrder($lesson);
+                }
+
                 return;
             }
 
@@ -67,7 +71,32 @@ class Lesson extends Model
 
             $lesson->group_name = $group->name;
             $lesson->group_order = (int) $group->sort_order;
+
+            if ((int) ($lesson->lesson_order ?? 0) <= 0) {
+                $lesson->lesson_order = self::computeNextLessonOrder($lesson);
+            }
         });
+    }
+
+    private static function computeNextLessonOrder(Lesson $lesson): int
+    {
+        if ((int) ($lesson->course_id ?? 0) <= 0) {
+            return 1;
+        }
+
+        $query = self::query()->where('course_id', (int) $lesson->course_id);
+
+        if ((int) ($lesson->lesson_group_id ?? 0) > 0) {
+            $query->where('lesson_group_id', (int) $lesson->lesson_group_id);
+        } elseif (! empty($lesson->group_name)) {
+            $query->where('group_name', $lesson->group_name);
+        }
+
+        if ($lesson->exists) {
+            $query->where('id', '!=', $lesson->id);
+        }
+
+        return ((int) $query->max('lesson_order')) + 1;
     }
 
     public function setDocumentNamesAttribute(?array $value): void
