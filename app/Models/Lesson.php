@@ -52,6 +52,45 @@ class Lesson extends Model
 
         $normalized = [];
 
+        if (array_is_list($value)) {
+            $documentPaths = collect($this->documents ?? [])->values();
+
+            foreach ($value as $index => $name) {
+                if (! is_string($name)) {
+                    continue;
+                }
+
+                $displayName = trim($name);
+                $path = $documentPaths->get($index);
+                $fallbackName = is_string($path) ? basename($path) : $displayName;
+
+                if ($displayName === '') {
+                    if ($fallbackName === '') {
+                        continue;
+                    }
+
+                    $normalized[] = $fallbackName;
+
+                    continue;
+                }
+
+                $extension = pathinfo($fallbackName, PATHINFO_EXTENSION);
+
+                if (
+                    $extension !== ''
+                    && strtolower(pathinfo($displayName, PATHINFO_EXTENSION)) !== strtolower($extension)
+                ) {
+                    $displayName .= ".{$extension}";
+                }
+
+                $normalized[] = $displayName;
+            }
+
+            $this->attributes['document_names'] = json_encode(array_values($normalized));
+
+            return;
+        }
+
         foreach ($value as $path => $name) {
             if (! is_string($path)) {
                 continue;

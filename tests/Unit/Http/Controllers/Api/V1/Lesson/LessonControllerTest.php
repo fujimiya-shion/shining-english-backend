@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
-use App\Services\Lesson\ILessonService;
-use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Lesson;
 use App\Models\Quiz;
+use App\Services\Lesson\ILessonService;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -111,7 +111,7 @@ it('returns notfound when lesson quiz has no quiz record', function (): void {
 });
 
 it('returns quiz data for lesson quiz endpoint', function (): void {
-    $quiz = new Quiz();
+    $quiz = new Quiz;
     $quiz->setAttribute('id', 1);
 
     $relation = \Mockery::mock(HasOne::class);
@@ -183,4 +183,40 @@ it('returns not found when lesson document index is invalid', function (): void 
         'status' => false,
         'status_code' => 404,
     ]);
+});
+
+it('returns not found when downloading document for missing lesson', function (): void {
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn(null);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->downloadDocument(10, 0);
+
+    assertJsonResponsePayload($response, 404, [
+        'message' => 'Not found',
+        'status' => false,
+        'status_code' => 404,
+    ]);
+});
+
+it('falls back to basename when document name at index is empty', function (): void {
+    Storage::fake('local');
+    Storage::disk('local')->put('lesson-documents/grammar-guide.pdf', 'pdf-content');
+
+    $lesson = new Lesson([
+        'documents' => ['lesson-documents/grammar-guide.pdf'],
+        'document_names' => [],
+    ]);
+    $lesson->id = 10;
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $controller = app()->make(LessonController::class);
+    $response = $controller->downloadDocument(10, 0);
+
+    expect($response->getStatusCode())->toBe(200);
+    expect($response->headers->get('content-disposition'))->toContain('grammar-guide.pdf');
 });
