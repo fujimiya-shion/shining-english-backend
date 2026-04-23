@@ -52,6 +52,7 @@ class LessonForm
                         ] : []),
                         Select::make('lesson_group_id')
                             ->label('Group')
+                            ->disabled(fn (Get $get): bool => ($fixedCourseId ?? (int) ($get('course_id') ?? 0)) <= 0)
                             ->options(function (Get $get) use ($fixedCourseId): array {
                                 $courseId = $fixedCourseId ?? (int) ($get('course_id') ?? 0);
                                 if ($courseId <= 0) {
@@ -67,6 +68,40 @@ class LessonForm
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('Group Name')
+                                    ->required()
+                                    ->maxLength(255),
+                            ])
+                            ->createOptionUsing(function (array $data, Get $get) use ($fixedCourseId): int {
+                                $courseId = $fixedCourseId ?? (int) ($get('course_id') ?? 0);
+
+                                if ($courseId <= 0) {
+                                    return 0;
+                                }
+
+                                $name = trim((string) ($data['name'] ?? ''));
+
+                                $existing = LessonGroup::query()
+                                    ->where('course_id', $courseId)
+                                    ->where('name', $name)
+                                    ->first();
+
+                                if ($existing) {
+                                    return (int) $existing->id;
+                                }
+
+                                $group = LessonGroup::query()->create([
+                                    'course_id' => $courseId,
+                                    'name' => $name,
+                                    'sort_order' => ((int) LessonGroup::query()
+                                        ->where('course_id', $courseId)
+                                        ->max('sort_order')) + 1,
+                                ]);
+
+                                return (int) $group->id;
+                            })
                             ->helperText('Manage groups in Course detail > Lesson Groups.')
                             ->columnSpan($withCourseField ? 4 : 8),
                         TextInput::make('lesson_order')
