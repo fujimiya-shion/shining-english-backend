@@ -6,6 +6,7 @@ use App\Models\Lesson;
 use App\Models\LessonGroup;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -122,6 +123,9 @@ class LessonGroupsRelationManager extends RelationManager
                         }
                     }),
                 EditAction::make(),
+                DeleteAction::make()
+                    ->disabled(fn (LessonGroup $record): bool => $record->lessons()->exists())
+                    ->tooltip('Cannot delete a group that still has lessons'),
             ]);
     }
 }
