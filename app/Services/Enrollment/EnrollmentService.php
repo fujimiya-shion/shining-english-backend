@@ -207,7 +207,8 @@ class EnrollmentService extends Service implements IEnrollmentService
     {
         return Lesson::query()
             ->where('course_id', $courseId)
-            ->orderBy('group_name')
+            ->orderBy('group_order')
+            ->orderBy('lesson_order')
             ->orderBy('id')
             ->get(['id', 'has_quiz']);
     }

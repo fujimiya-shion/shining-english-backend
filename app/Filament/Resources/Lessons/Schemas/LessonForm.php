@@ -18,7 +18,7 @@ use Filament\Schemas\Schema;
 
 class LessonForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Schema $schema, bool $withCourseField = true): Schema
     {
         return $schema
             ->columns(1)
@@ -35,17 +35,33 @@ class LessonForm
                             ->unique(ignoreRecord: true)
                             ->helperText('Leave empty to auto-generate from name.')
                             ->columnSpan(4),
-                        Select::make('course_id')
-                            ->relationship('course', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->columnSpan(6),
+                        ...($withCourseField ? [
+                            Select::make('course_id')
+                                ->relationship('course', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->columnSpan(6),
+                        ] : []),
                         TextInput::make('group_name')
                             ->label('Group')
                             ->maxLength(255)
                             ->placeholder('VD: Fundamentals of English')
-                            ->columnSpan(6),
+                            ->columnSpan($withCourseField ? 4 : 8),
+                        TextInput::make('group_order')
+                            ->label('Group Order')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(1)
+                            ->required()
+                            ->columnSpan(2),
+                        TextInput::make('lesson_order')
+                            ->label('Lesson Order')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(1)
+                            ->required()
+                            ->columnSpan(2),
                         FileUpload::make('video_url')
                             ->key('lesson-video-upload')
                             ->label('Video')

@@ -18,6 +18,8 @@ class Lesson extends Model
         'star_reward_video' => 0,
         'star_reward_quiz' => 0,
         'has_quiz' => false,
+        'group_order' => 0,
+        'lesson_order' => 0,
     ];
 
     protected $fillable = [
@@ -25,6 +27,8 @@ class Lesson extends Model
         'slug',
         'course_id',
         'group_name',
+        'group_order',
+        'lesson_order',
         'video_url',
         'documents',
         'document_names',
@@ -37,6 +41,8 @@ class Lesson extends Model
 
     protected $casts = [
         'has_quiz' => 'boolean',
+        'group_order' => 'integer',
+        'lesson_order' => 'integer',
         'duration_minutes' => 'integer',
         'documents' => 'array',
         'document_names' => 'array',
