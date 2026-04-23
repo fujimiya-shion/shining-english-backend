@@ -4,8 +4,11 @@ namespace App\Filament\Resources\Courses\RelationManagers;
 
 use App\Models\Lesson;
 use App\Models\LessonGroup;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -43,6 +46,7 @@ class LessonGroupsRelationManager extends RelationManager
                     ->label('Lessons')
                     ->counts('lessons'),
             ])
+            ->recordAction('reorderLessons')
             ->reorderable('sort_order')
             ->afterReordering(function (array $order): void {
                 foreach (array_values($order) as $index => $groupId) {
@@ -64,6 +68,59 @@ class LessonGroupsRelationManager extends RelationManager
                     ]),
             ])
             ->actions([
+                Action::make('reorderLessons')
+                    ->label('Reorder Lessons')
+                    ->icon('heroicon-o-arrows-up-down')
+                    ->slideOver()
+                    ->modalSubmitActionLabel('Save order')
+                    ->fillForm(function (LessonGroup $record): array {
+                        return [
+                            'lessons' => Lesson::query()
+                                ->where('lesson_group_id', $record->id)
+                                ->orderBy('lesson_order')
+                                ->orderBy('id')
+                                ->get(['id', 'name'])
+                                ->map(fn (Lesson $lesson): array => [
+                                    'id' => (int) $lesson->id,
+                                    'name' => (string) $lesson->name,
+                                ])
+                                ->all(),
+                        ];
+                    })
+                    ->form([
+                        Repeater::make('lessons')
+                            ->label('Lessons in this group')
+                            ->schema([
+                                Hidden::make('id'),
+                                TextInput::make('name')
+                                    ->disabled()
+                                    ->dehydrated(false),
+                            ])
+                            ->addable(false)
+                            ->deletable(false)
+                            ->reorderable()
+                            ->columns(1),
+                    ])
+                    ->action(function (array $data, LessonGroup $record): void {
+                        $courseId = (int) $record->course_id;
+                        $groupOrder = (int) $record->sort_order;
+
+                        foreach (array_values($data['lessons'] ?? []) as $index => $item) {
+                            $lessonId = (int) ($item['id'] ?? 0);
+                            if ($lessonId <= 0) {
+                                continue;
+                            }
+
+                            Lesson::query()
+                                ->where('id', $lessonId)
+                                ->where('course_id', $courseId)
+                                ->where('lesson_group_id', $record->id)
+                                ->update([
+                                    'lesson_order' => $index + 1,
+                                    'group_order' => $groupOrder,
+                                ]);
+                        }
+                    }),
                 EditAction::make(),
             ]);
     }
