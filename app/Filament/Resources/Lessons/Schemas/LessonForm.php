@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Lessons\Schemas;
 
+use App\Models\LessonGroup;
 use App\Util\Video\VideoMetadataReader;
 use App\Util\Php\PhpUploadLimit;
 use Filament\Forms\Components\Select;
@@ -18,7 +19,11 @@ use Filament\Schemas\Schema;
 
 class LessonForm
 {
-    public static function configure(Schema $schema, bool $withCourseField = true): Schema
+    public static function configure(
+        Schema $schema,
+        bool $withCourseField = true,
+        ?int $fixedCourseId = null
+    ): Schema
     {
         return $schema
             ->columns(1)
@@ -40,28 +45,37 @@ class LessonForm
                                 ->relationship('course', 'name')
                                 ->searchable()
                                 ->preload()
+                                ->live()
                                 ->required()
+                                ->afterStateUpdated(fn (Set $set): mixed => $set('lesson_group_id', null))
                                 ->columnSpan(6),
                         ] : []),
-                        TextInput::make('group_name')
+                        Select::make('lesson_group_id')
                             ->label('Group')
-                            ->maxLength(255)
-                            ->placeholder('VD: Fundamentals of English')
-                            ->columnSpan($withCourseField ? 4 : 8),
-                        TextInput::make('group_order')
-                            ->label('Group Order')
-                            ->numeric()
-                            ->minValue(1)
-                            ->default(1)
+                            ->options(function (Get $get) use ($fixedCourseId): array {
+                                $courseId = $fixedCourseId ?? (int) ($get('course_id') ?? 0);
+                                if ($courseId <= 0) {
+                                    return [];
+                                }
+
+                                return LessonGroup::query()
+                                    ->where('course_id', $courseId)
+                                    ->orderBy('sort_order')
+                                    ->pluck('name', 'id')
+                                    ->all();
+                            })
+                            ->searchable()
+                            ->preload()
                             ->required()
-                            ->columnSpan(2),
+                            ->helperText('Manage groups in Course detail > Lesson Groups.')
+                            ->columnSpan($withCourseField ? 4 : 8),
                         TextInput::make('lesson_order')
                             ->label('Lesson Order')
                             ->numeric()
                             ->minValue(1)
                             ->default(1)
                             ->required()
-                            ->columnSpan(2),
+                            ->columnSpan($withCourseField ? 2 : 4),
                         FileUpload::make('video_url')
                             ->key('lesson-video-upload')
                             ->label('Video')

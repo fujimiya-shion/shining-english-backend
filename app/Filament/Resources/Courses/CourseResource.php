@@ -8,6 +8,7 @@ use App\Filament\Resources\Courses\Pages\EditCourse;
 use App\Filament\Resources\Courses\Pages\ListCourses;
 use App\Filament\Resources\Courses\RelationManagers\CourseReviewsRelationManager;
 use App\Filament\Resources\Courses\RelationManagers\EnrollmentsRelationManager;
+use App\Filament\Resources\Courses\RelationManagers\LessonGroupsRelationManager;
 use App\Filament\Resources\Courses\RelationManagers\LessonsRelationManager;
 use App\Filament\Resources\Courses\Schemas\CourseForm;
 use App\Filament\Resources\Courses\Tables\CoursesTable;
@@ -47,6 +48,7 @@ class CourseResource extends BaseResource
     public static function getRelations(): array
     {
         return [
+            LessonGroupsRelationManager::class,
             LessonsRelationManager::class,
             EnrollmentsRelationManager::class,
             CourseReviewsRelationManager::class,

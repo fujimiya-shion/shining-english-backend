@@ -26,6 +26,7 @@ class Lesson extends Model
         'name',
         'slug',
         'course_id',
+        'lesson_group_id',
         'group_name',
         'group_order',
         'lesson_order',
@@ -41,12 +42,33 @@ class Lesson extends Model
 
     protected $casts = [
         'has_quiz' => 'boolean',
+        'lesson_group_id' => 'integer',
         'group_order' => 'integer',
         'lesson_order' => 'integer',
         'duration_minutes' => 'integer',
         'documents' => 'array',
         'document_names' => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Lesson $lesson): void {
+            if (! $lesson->lesson_group_id) {
+                return;
+            }
+
+            $group = $lesson->relationLoaded('lessonGroup')
+                ? $lesson->lessonGroup
+                : LessonGroup::query()->find($lesson->lesson_group_id);
+
+            if (! $group) {
+                return;
+            }
+
+            $lesson->group_name = $group->name;
+            $lesson->group_order = (int) $group->sort_order;
+        });
+    }
 
     public function setDocumentNamesAttribute(?array $value): void
     {
@@ -129,6 +151,11 @@ class Lesson extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function lessonGroup(): BelongsTo
+    {
+        return $this->belongsTo(LessonGroup::class);
     }
 
     public function quiz(): HasOne

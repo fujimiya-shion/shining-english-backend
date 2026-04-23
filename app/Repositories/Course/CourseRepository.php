@@ -35,6 +35,7 @@ class CourseRepository extends Repository implements ICourseRepository
                         'name',
                         'slug',
                         'course_id',
+                        'lesson_group_id',
                         'group_name',
                         'group_order',
                         'lesson_order',

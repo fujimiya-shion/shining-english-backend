@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Courses\RelationManagers;
 
 use App\Filament\Resources\Lessons\Schemas\LessonForm;
 use App\Models\Lesson;
+use App\Models\LessonGroup;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -26,7 +27,11 @@ class LessonsRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        return LessonForm::configure($schema, withCourseField: false);
+        return LessonForm::configure(
+            $schema,
+            withCourseField: false,
+            fixedCourseId: (int) $this->getOwnerRecord()->id,
+        );
     }
 
     public function table(Table $table): Table
@@ -44,7 +49,7 @@ class LessonsRelationManager extends RelationManager
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('group_name')
+                TextColumn::make('lessonGroup.name')
                     ->label('Group')
                     ->searchable()
                     ->sortable(),
@@ -84,14 +89,13 @@ class LessonsRelationManager extends RelationManager
 
                 /** @var Collection<int, Lesson> $lessons */
                 $lessons = Lesson::query()
+                    ->with('lessonGroup:id,sort_order')
                     ->where('course_id', $courseId)
                     ->whereIn('id', $orderedIds->all())
                     ->get()
                     ->keyBy('id');
 
-                $groupOrderMap = [];
                 $lessonOrderInGroup = [];
-                $nextGroupOrder = 1;
 
                 foreach ($orderedIds as $lessonId) {
                     $lesson = $lessons->get($lessonId);
@@ -99,44 +103,31 @@ class LessonsRelationManager extends RelationManager
                         continue;
                     }
 
-                    $groupName = trim((string) ($lesson->group_name ?? ''));
-
-                    if (! array_key_exists($groupName, $groupOrderMap)) {
-                        $groupOrderMap[$groupName] = $nextGroupOrder++;
-                        $lessonOrderInGroup[$groupName] = 1;
-                    }
+                    $groupKey = $lesson->lesson_group_id ?: 0;
+                    $groupOrder = $lesson->lessonGroup?->sort_order ?? $lesson->group_order ?? 0;
+                    $lessonOrderInGroup[$groupKey] ??= 1;
 
                     $lesson->update([
-                        'group_order' => $groupOrderMap[$groupName],
-                        'lesson_order' => $lessonOrderInGroup[$groupName],
+                        'group_order' => (int) $groupOrder,
+                        'lesson_order' => $lessonOrderInGroup[$groupKey],
                     ]);
 
-                    $lessonOrderInGroup[$groupName]++;
+                    $lessonOrderInGroup[$groupKey]++;
                 }
             })
             ->headerActions([
                 CreateAction::make()
                     ->mutateDataUsing(function (array $data): array {
                         $courseId = (int) $this->getOwnerRecord()->id;
-                        $groupName = trim((string) ($data['group_name'] ?? ''));
-
-                        $existingGroupOrder = Lesson::withTrashed()
+                        $groupId = (int) ($data['lesson_group_id'] ?? 0);
+                        $group = LessonGroup::query()
                             ->where('course_id', $courseId)
-                            ->where('group_name', $groupName)
-                            ->value('group_order');
-
-                        $nextGroupOrder = (int) Lesson::withTrashed()
-                            ->where('course_id', $courseId)
-                            ->max('group_order') + 1;
-
-                        $groupOrder = max(
-                            1,
-                            (int) ($data['group_order'] ?? $existingGroupOrder ?? $nextGroupOrder),
-                        );
+                            ->find($groupId);
+                        $groupOrder = (int) ($group?->sort_order ?? 0);
 
                         $nextLessonOrder = (int) Lesson::withTrashed()
                             ->where('course_id', $courseId)
-                            ->where('group_name', $groupName)
+                            ->where('lesson_group_id', $groupId)
                             ->max('lesson_order') + 1;
 
                         return [
@@ -151,24 +142,14 @@ class LessonsRelationManager extends RelationManager
                 EditAction::make()
                     ->mutateDataUsing(function (array $data, Lesson $record): array {
                         $courseId = (int) $record->course_id;
-                        $groupName = trim((string) ($data['group_name'] ?? $record->group_name ?? ''));
-
-                        $existingGroupOrder = Lesson::withTrashed()
+                        $groupId = (int) ($data['lesson_group_id'] ?? $record->lesson_group_id ?? 0);
+                        $group = LessonGroup::query()
                             ->where('course_id', $courseId)
-                            ->where('group_name', $groupName)
-                            ->where('id', '!=', $record->id)
-                            ->value('group_order');
-
-                        $nextGroupOrder = (int) Lesson::withTrashed()
-                            ->where('course_id', $courseId)
-                            ->max('group_order') + 1;
+                            ->find($groupId);
 
                         return [
                             ...$data,
-                            'group_order' => max(
-                                1,
-                                (int) ($data['group_order'] ?? $existingGroupOrder ?? $nextGroupOrder),
-                            ),
+                            'group_order' => (int) ($group?->sort_order ?? 0),
                             'lesson_order' => max(1, (int) ($data['lesson_order'] ?? $record->lesson_order ?? 1)),
                         ];
                     }),
