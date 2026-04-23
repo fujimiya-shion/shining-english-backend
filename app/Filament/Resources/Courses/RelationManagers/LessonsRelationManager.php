@@ -39,7 +39,8 @@ class LessonsRelationManager extends RelationManager
             ->columns([
                 TextInputColumn::make('group_order')
                     ->label('Group Order')
-                    ->numeric()
+                    ->type('number')
+                    ->inputMode('numeric')
                     ->rules(['required', 'integer', 'min:1'])
                     ->width('8rem')
                     ->sortable()
