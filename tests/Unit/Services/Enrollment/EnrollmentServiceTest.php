@@ -5,6 +5,7 @@ namespace Tests\Unit\Services\Enrollment;
 use App\Enums\OrderStatus;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Models\Lesson;
 use App\Models\Order;
 use App\Models\User;
 use App\Repositories\Enrollment\EnrollmentRepository;
@@ -269,4 +270,82 @@ it('returns false when enrollment order is already paid while checking pending a
     $service = new EnrollmentService($repository);
 
     expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
+});
+
+it('returns persisted learning progress payload for enrollment', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lessonA = Lesson::query()->create([
+        'name' => 'A',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/a.mp4',
+        'duration_minutes' => 5,
+        'has_quiz' => false,
+    ]);
+    $lessonB = Lesson::query()->create([
+        'name' => 'B',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/b.mp4',
+        'duration_minutes' => 6,
+        'has_quiz' => true,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+        'current_lesson_id' => $lessonB->id,
+        'completed_lesson_ids' => [$lessonA->id],
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $result = $service->getLearningProgress($user->id, $course->id);
+
+    expect($result)->not->toBeNull();
+    expect($result['current_lesson_id'])->toBe($lessonB->id);
+    expect($result['completed_lesson_ids'])->toBe([$lessonA->id]);
+    expect($result['total_lessons'])->toBe(2);
+    expect($result['progress_percentage'])->toBe(50.0);
+});
+
+it('completes a lesson, moves to next lesson and returns next quiz hint', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lessonA = Lesson::query()->create([
+        'name' => 'A',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/a.mp4',
+        'duration_minutes' => 5,
+        'has_quiz' => false,
+    ]);
+    $lessonB = Lesson::query()->create([
+        'name' => 'B',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/b.mp4',
+        'duration_minutes' => 6,
+        'has_quiz' => true,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+        'current_lesson_id' => $lessonA->id,
+        'completed_lesson_ids' => [],
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $result = $service->completeLesson($user->id, $course->id, $lessonA->id);
+
+    expect($result)->not->toBeNull();
+    expect($result['current_lesson_id'])->toBe($lessonB->id);
+    expect($result['completed_lesson_ids'])->toBe([$lessonA->id]);
+    expect($result['next_lesson'])->toBe([
+        'id' => $lessonB->id,
+        'has_quiz' => true,
+    ]);
 });

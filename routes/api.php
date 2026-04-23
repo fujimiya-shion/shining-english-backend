@@ -75,6 +75,9 @@ Route::prefix('/v1')->group(function () {
             ->prefix('/courses')
             ->group(function () {
                 Route::get('/{id}/access', 'access');
+                Route::get('/{id}/learning-progress', 'learningProgress');
+                Route::post('/{id}/lessons/{lessonId}/complete', 'completeLesson');
+                Route::post('/{id}/current-lesson', 'setCurrentLesson');
             });
 
         Route::middleware(VerifyUserToken::class)

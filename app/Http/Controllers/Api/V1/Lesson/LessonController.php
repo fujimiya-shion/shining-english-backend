@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LessonController extends ApiController
@@ -83,12 +84,13 @@ class LessonController extends ApiController
             return $this->notfound();
         }
 
-        return response()->file(
-            Storage::disk('local')->path($path),
-            [
-                'Accept-Ranges' => 'bytes',
-                'Content-Disposition' => 'inline; filename="'.basename($path).'"',
-            ],
+        $response = new BinaryFileResponse(Storage::disk('local')->path($path));
+        $response->headers->set('Accept-Ranges', 'bytes');
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_INLINE,
+            basename($path),
         );
+
+        return $response;
     }
 }

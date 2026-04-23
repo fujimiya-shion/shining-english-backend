@@ -19,6 +19,8 @@ class Enrollment extends Model
         'course_id',
         'order_id',
         'enrolled_at',
+        'current_lesson_id',
+        'completed_lesson_ids',
     ];
 
     /**
@@ -28,6 +30,7 @@ class Enrollment extends Model
     {
         return [
             'enrolled_at' => 'datetime',
+            'completed_lesson_ids' => 'array',
         ];
     }
 

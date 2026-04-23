@@ -11,6 +11,8 @@ it('defines fillable attributes', function (): void {
         'course_id',
         'order_id',
         'enrolled_at',
+        'current_lesson_id',
+        'completed_lesson_ids',
     ]);
 });
 
@@ -19,6 +21,7 @@ it('casts attributes correctly', function (): void {
 
     expect($model->getCasts())->toMatchArray([
         'enrolled_at' => 'datetime',
+        'completed_lesson_ids' => 'array',
     ]);
 });
 
