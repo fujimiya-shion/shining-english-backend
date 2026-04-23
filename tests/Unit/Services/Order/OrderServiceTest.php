@@ -241,5 +241,5 @@ it('cancels an existing order', function (): void {
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
 
     expect($service->cancelByUserId(10, 123))->toBeTrue();
-    expect($order->status)->toBe(OrderStatus::Cancelled);
+    expect($order->getAttributes()['status'])->toBe(OrderStatus::Cancelled->value);
 });
