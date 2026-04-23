@@ -5,20 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Enrollment extends Model
+class LessonProgress extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
-    /**
-     * @var list<string>
-     */
+    protected $table = 'lesson_progresses';
+
     protected $fillable = [
         'user_id',
         'course_id',
-        'order_id',
-        'enrolled_at',
+        'lesson_id',
+        'is_current',
+        'completed_at',
     ];
 
     /**
@@ -27,7 +26,8 @@ class Enrollment extends Model
     protected function casts(): array
     {
         return [
-            'enrolled_at' => 'datetime',
+            'is_current' => 'boolean',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -41,8 +41,8 @@ class Enrollment extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function order(): BelongsTo
+    public function lesson(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Lesson::class);
     }
 }

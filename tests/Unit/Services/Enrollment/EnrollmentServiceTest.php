@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\LessonProgress;
 use App\Models\Order;
 use App\Models\User;
 use App\Repositories\Enrollment\EnrollmentRepository;
@@ -296,8 +297,20 @@ it('returns persisted learning progress payload for enrollment', function (): vo
         'user_id' => $user->id,
         'course_id' => $course->id,
         'enrolled_at' => now(),
-        'current_lesson_id' => $lessonB->id,
-        'completed_lesson_ids' => [$lessonA->id],
+    ]);
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lessonA->id,
+        'completed_at' => now()->subMinute(),
+        'is_current' => false,
+    ]);
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lessonB->id,
+        'completed_at' => null,
+        'is_current' => true,
     ]);
 
     $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
@@ -334,8 +347,13 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
         'user_id' => $user->id,
         'course_id' => $course->id,
         'enrolled_at' => now(),
-        'current_lesson_id' => $lessonA->id,
-        'completed_lesson_ids' => [],
+    ]);
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lessonA->id,
+        'completed_at' => null,
+        'is_current' => true,
     ]);
 
     $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));

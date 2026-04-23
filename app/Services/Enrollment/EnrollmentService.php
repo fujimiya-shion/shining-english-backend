@@ -5,6 +5,7 @@ namespace App\Services\Enrollment;
 use App\Enums\OrderStatus;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\LessonProgress;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Services\Service;
 use Illuminate\Database\QueryException;
@@ -95,23 +96,7 @@ class EnrollmentService extends Service implements IEnrollmentService
 
         $orderedLessons = $this->getOrderedLessons($courseId);
         $orderedLessonIds = $orderedLessons->pluck('id')->map(fn (mixed $id): int => (int) $id)->all();
-        $completedLessonIds = $this->normalizeCompletedLessonIds(
-            $enrollment->completed_lesson_ids,
-            $orderedLessonIds,
-        );
-
-        $currentLessonId = $this->resolveCurrentLessonId(
-            $orderedLessonIds,
-            $completedLessonIds,
-            $enrollment->current_lesson_id,
-        );
-
-        if ($currentLessonId !== $enrollment->current_lesson_id || $completedLessonIds !== ($enrollment->completed_lesson_ids ?? [])) {
-            $enrollment->fill([
-                'current_lesson_id' => $currentLessonId,
-                'completed_lesson_ids' => $completedLessonIds,
-            ])->save();
-        }
+        [$completedLessonIds, $currentLessonId] = $this->collectProgressState($userId, $courseId, $orderedLessonIds);
 
         return $this->buildProgressPayload($courseId, $currentLessonId, $completedLessonIds, count($orderedLessonIds));
     }
@@ -129,41 +114,47 @@ class EnrollmentService extends Service implements IEnrollmentService
             return null;
         }
 
-        $completedLessonIds = $this->normalizeCompletedLessonIds(
-            $enrollment->completed_lesson_ids,
-            $orderedLessonIds,
-        );
+        DB::transaction(function () use ($userId, $courseId, $lessonId): void {
+            LessonProgress::query()
+                ->where('user_id', $userId)
+                ->where('course_id', $courseId)
+                ->update(['is_current' => false]);
 
-        if (! in_array($lessonId, $completedLessonIds, true)) {
-            $completedLessonIds[] = $lessonId;
-        }
+            LessonProgress::query()->updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'lesson_id' => $lessonId,
+                ],
+                [
+                    'completed_at' => now(),
+                    'is_current' => false,
+                ],
+            );
+        });
 
-        $completedSet = array_fill_keys($completedLessonIds, true);
-        $completedInOrder = [];
-        foreach ($orderedLessonIds as $orderedLessonId) {
-            if (isset($completedSet[$orderedLessonId])) {
-                $completedInOrder[] = $orderedLessonId;
-            }
-        }
-
+        [$completedLessonIds, $currentLessonId] = $this->collectProgressState($userId, $courseId, $orderedLessonIds);
         $nextLesson = null;
-        foreach ($orderedLessons as $lesson) {
-            $candidateId = (int) $lesson->id;
-            if (! in_array($candidateId, $completedInOrder, true)) {
-                $nextLesson = $lesson;
-                break;
-            }
+
+        if ($currentLessonId !== null) {
+            LessonProgress::query()->updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'lesson_id' => $currentLessonId,
+                ],
+                [
+                    'is_current' => true,
+                ],
+            );
+
+            $nextLesson = $orderedLessons->first(
+                fn (Lesson $lesson): bool => (int) $lesson->id === $currentLessonId,
+            );
         }
-
-        $currentLessonId = $nextLesson ? (int) $nextLesson->id : (count($orderedLessonIds) > 0 ? end($orderedLessonIds) : null);
-
-        $enrollment->fill([
-            'current_lesson_id' => $currentLessonId,
-            'completed_lesson_ids' => $completedInOrder,
-        ])->save();
 
         return [
-            ...$this->buildProgressPayload($courseId, $currentLessonId, $completedInOrder, count($orderedLessonIds)),
+            ...$this->buildProgressPayload($courseId, $currentLessonId, $completedLessonIds, count($orderedLessonIds)),
             'next_lesson' => $nextLesson
                 ? [
                     'id' => (int) $nextLesson->id,
@@ -186,17 +177,27 @@ class EnrollmentService extends Service implements IEnrollmentService
             return null;
         }
 
-        $completedLessonIds = $this->normalizeCompletedLessonIds(
-            $enrollment->completed_lesson_ids,
-            $orderedLessonIds,
-        );
+        DB::transaction(function () use ($userId, $courseId, $lessonId): void {
+            LessonProgress::query()
+                ->where('user_id', $userId)
+                ->where('course_id', $courseId)
+                ->update(['is_current' => false]);
 
-        $enrollment->fill([
-            'current_lesson_id' => $lessonId,
-            'completed_lesson_ids' => $completedLessonIds,
-        ])->save();
+            LessonProgress::query()->updateOrCreate(
+                [
+                    'user_id' => $userId,
+                    'course_id' => $courseId,
+                    'lesson_id' => $lessonId,
+                ],
+                [
+                    'is_current' => true,
+                ],
+            );
+        });
 
-        return $this->buildProgressPayload($courseId, $lessonId, $completedLessonIds, count($orderedLessonIds));
+        [$completedLessonIds, $currentLessonId] = $this->collectProgressState($userId, $courseId, $orderedLessonIds);
+
+        return $this->buildProgressPayload($courseId, $currentLessonId, $completedLessonIds, count($orderedLessonIds));
     }
 
     /**
@@ -213,61 +214,61 @@ class EnrollmentService extends Service implements IEnrollmentService
 
     /**
      * @param  list<int>  $orderedLessonIds
-     * @return list<int>
+     * @return array{0:list<int>,1:int|null}
      */
-    private function normalizeCompletedLessonIds(mixed $rawCompletedLessonIds, array $orderedLessonIds): array
+    private function collectProgressState(int $userId, int $courseId, array $orderedLessonIds): array
     {
-        if (! is_array($rawCompletedLessonIds) || $orderedLessonIds === []) {
-            return [];
+        if ($orderedLessonIds === []) {
+            return [[], null];
         }
 
-        $allowedSet = array_fill_keys($orderedLessonIds, true);
-        $normalized = [];
+        $progressRows = LessonProgress::query()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->get(['lesson_id', 'is_current', 'completed_at', 'updated_at']);
 
-        foreach ($rawCompletedLessonIds as $value) {
-            $lessonId = is_numeric($value) ? (int) $value : null;
-            if ($lessonId === null || ! isset($allowedSet[$lessonId])) {
+        $allowedSet = array_fill_keys($orderedLessonIds, true);
+        $completedSet = [];
+        $currentCandidate = null;
+        $currentCandidateUpdatedAt = null;
+
+        foreach ($progressRows as $row) {
+            $lessonId = (int) $row->lesson_id;
+            if (! isset($allowedSet[$lessonId])) {
                 continue;
             }
 
-            if (! in_array($lessonId, $normalized, true)) {
-                $normalized[] = $lessonId;
+            if ($row->completed_at !== null) {
+                $completedSet[$lessonId] = true;
+            }
+
+            if ($row->is_current) {
+                $updatedAt = $row->updated_at?->getTimestamp() ?? 0;
+                if ($currentCandidateUpdatedAt === null || $updatedAt >= $currentCandidateUpdatedAt) {
+                    $currentCandidate = $lessonId;
+                    $currentCandidateUpdatedAt = $updatedAt;
+                }
             }
         }
 
-        $result = [];
+        $completedLessonIds = [];
         foreach ($orderedLessonIds as $lessonId) {
-            if (in_array($lessonId, $normalized, true)) {
-                $result[] = $lessonId;
+            if (isset($completedSet[$lessonId])) {
+                $completedLessonIds[] = $lessonId;
             }
         }
 
-        return $result;
-    }
-
-    /**
-     * @param  list<int>  $orderedLessonIds
-     * @param  list<int>  $completedLessonIds
-     */
-    private function resolveCurrentLessonId(array $orderedLessonIds, array $completedLessonIds, mixed $storedCurrentLessonId): ?int
-    {
-        if ($orderedLessonIds === []) {
-            return null;
-        }
-
-        $candidate = is_numeric($storedCurrentLessonId) ? (int) $storedCurrentLessonId : null;
-        if ($candidate !== null && in_array($candidate, $orderedLessonIds, true)) {
-            return $candidate;
-        }
-
-        $completedSet = array_fill_keys($completedLessonIds, true);
+        $currentLessonId = $currentCandidate;
         foreach ($orderedLessonIds as $lessonId) {
             if (! isset($completedSet[$lessonId])) {
-                return $lessonId;
+                if ($currentLessonId === null || ! in_array($currentLessonId, $orderedLessonIds, true)) {
+                    $currentLessonId = $lessonId;
+                }
+                break;
             }
         }
 
-        return end($orderedLessonIds) ?: null;
+        return [$completedLessonIds, $currentLessonId];
     }
 
     /**
