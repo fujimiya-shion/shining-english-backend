@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Course;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Api\V1\Course\CourseCurrentLessonRequest;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
 use App\Services\Cart\ICartService;
 use App\Services\Course\ICourseService;
@@ -73,5 +74,69 @@ class CourseController extends ApiController
             'pending_access' => $this->enrollmentService->hasPendingEnrollment($user->id, $id),
             'in_cart' => $this->cartService->hasCourse($user->id, $id),
         ]);
+    }
+
+    public function learningProgress(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        $course = $this->service->getById($id);
+        if (! $course) {
+            return $this->notfound();
+        }
+
+        if (! $this->enrollmentService->isEnrolled($user->id, $id)) {
+            return $this->unauthorized('Course access denied');
+        }
+
+        $progress = $this->enrollmentService->getLearningProgress($user->id, $id);
+        if (! $progress) {
+            return $this->notfound();
+        }
+
+        return $this->success(data: $progress);
+    }
+
+    public function completeLesson(Request $request, int $id, int $lessonId): JsonResponse
+    {
+        $user = $request->user();
+
+        $course = $this->service->getById($id);
+        if (! $course) {
+            return $this->notfound();
+        }
+
+        if (! $this->enrollmentService->isEnrolled($user->id, $id)) {
+            return $this->unauthorized('Course access denied');
+        }
+
+        $progress = $this->enrollmentService->completeLesson($user->id, $id, $lessonId);
+        if (! $progress) {
+            return $this->notfound();
+        }
+
+        return $this->success(data: $progress);
+    }
+
+    public function setCurrentLesson(CourseCurrentLessonRequest $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $lessonId = (int) $request->validated('lesson_id');
+
+        $course = $this->service->getById($id);
+        if (! $course) {
+            return $this->notfound();
+        }
+
+        if (! $this->enrollmentService->isEnrolled($user->id, $id)) {
+            return $this->unauthorized('Course access denied');
+        }
+
+        $progress = $this->enrollmentService->setCurrentLesson($user->id, $id, $lessonId);
+        if (! $progress) {
+            return $this->notfound();
+        }
+
+        return $this->success(data: $progress);
     }
 }

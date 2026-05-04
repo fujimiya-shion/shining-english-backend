@@ -12,4 +12,38 @@ interface IEnrollmentService extends IService
     public function isEnrolled(int $userId, int $courseId): bool;
 
     public function hasPendingEnrollment(int $userId, int $courseId): bool;
+
+    /**
+     * @return array{
+     *   course_id:int,
+     *   current_lesson_id:int|null,
+     *   completed_lesson_ids:list<int>,
+     *   total_lessons:int,
+     *   progress_percentage:float
+     * }|null
+     */
+    public function getLearningProgress(int $userId, int $courseId): ?array;
+
+    /**
+     * @return array{
+     *   course_id:int,
+     *   current_lesson_id:int|null,
+     *   completed_lesson_ids:list<int>,
+     *   total_lessons:int,
+     *   progress_percentage:float,
+     *   next_lesson:array{id:int,has_quiz:bool}|null
+     * }|null
+     */
+    public function completeLesson(int $userId, int $courseId, int $lessonId): ?array;
+
+    /**
+     * @return array{
+     *   course_id:int,
+     *   current_lesson_id:int|null,
+     *   completed_lesson_ids:list<int>,
+     *   total_lessons:int,
+     *   progress_percentage:float
+     * }|null
+     */
+    public function setCurrentLesson(int $userId, int $courseId, int $lessonId): ?array;
 }
