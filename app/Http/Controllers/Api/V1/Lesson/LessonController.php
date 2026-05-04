@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Lesson;
 use App\Http\Controllers\Api\ApiController;
 use App\Services\IService;
 use App\Services\Lesson\ILessonService;
+use App\Services\LessonAccess\ILessonAccessService;
 use App\Traits\ApiBehaviour;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class LessonController extends ApiController
 
     public function __construct(
         protected ILessonService $service,
+        protected ILessonAccessService $lessonAccessService,
     ) {}
 
     protected function service(): IService
@@ -35,6 +37,11 @@ class LessonController extends ApiController
             return $this->notfound();
         }
 
+        $userId = $request->user()?->id;
+        if (! $this->lessonAccessService->canAccessLessonProtectedContent($userId, $lesson)) {
+            return $this->unauthorized('Lesson access denied');
+        }
+
         $quiz = $lesson->quiz()
             ->with(['questions.answers'])
             ->first();
@@ -46,12 +53,17 @@ class LessonController extends ApiController
         return $this->success('Get Quiz Successfully', $quiz);
     }
 
-    public function downloadDocument(int $id, int $documentIndex): JsonResponse|StreamedResponse
+    public function downloadDocument(Request $request, int $id, int $documentIndex): JsonResponse|StreamedResponse
     {
         $lesson = $this->service->getById($id);
 
         if (! $lesson) {
             return $this->notfound();
+        }
+
+        $userId = $request->user()?->id;
+        if (! $this->lessonAccessService->canAccessLessonProtectedContent($userId, $lesson)) {
+            return $this->unauthorized('Lesson access denied');
         }
 
         $paths = collect($lesson->documents ?? [])
@@ -71,12 +83,17 @@ class LessonController extends ApiController
         return Storage::disk('local')->download($path, $fileName);
     }
 
-    public function video(int $id): JsonResponse|BinaryFileResponse
+    public function video(Request $request, int $id): JsonResponse|BinaryFileResponse
     {
         $lesson = $this->service->getById($id);
 
         if (! $lesson) {
             return $this->notfound();
+        }
+
+        $userId = $request->user()?->id;
+        if (! $this->lessonAccessService->canWatchLessonVideo($userId, $lesson)) {
+            return $this->unauthorized('Lesson video access denied');
         }
 
         $path = is_string($lesson->video_url ?? null) ? trim($lesson->video_url) : '';

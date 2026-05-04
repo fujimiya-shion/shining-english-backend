@@ -18,7 +18,6 @@ class DashboardController extends ApiController
         $user = $request->user();
         $data = $this->dashboardService->overview((int) $user->id);
 
-        return $this->success(data: $data);
+        return $this->success(data: $data->toArray());
     }
 }
-

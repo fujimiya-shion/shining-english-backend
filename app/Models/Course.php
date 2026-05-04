@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Traits\Slugable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +14,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Course extends Model
 {
     use HasFactory, Slugable, SoftDeletes;
+
+    protected $appends = [
+        'comments_count',
+    ];
 
     protected $fillable = [
         'name',
@@ -25,6 +31,78 @@ class Course extends Model
         'rating',
         'learned',
     ];
+
+    public function scopeWithCardCounts(Builder $query): Builder
+    {
+        return $query->withCount([
+            'lessons',
+            'reviews as comments_count',
+        ]);
+    }
+
+    public function scopeWithCardMetrics(Builder $query): Builder
+    {
+        return $query
+            ->withCardCounts()
+            ->withSum('lessons as total_duration_minutes', 'duration_minutes');
+    }
+
+    public function getThumbnailAttribute($value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $thumbnail = trim($value);
+
+        if (Str::startsWith($thumbnail, ['http://', 'https://'])) {
+            return $thumbnail;
+        }
+
+        if (Str::startsWith($thumbnail, '/storage/')) {
+            return rtrim((string) config('app.url'), '/').$thumbnail;
+        }
+
+        if (Str::startsWith($thumbnail, 'public/')) {
+            return rtrim((string) config('app.url'), '/').'/storage/'.ltrim(Str::after($thumbnail, 'public/'), '/');
+        }
+
+        return rtrim((string) config('app.url'), '/').'/storage/'.ltrim($thumbnail, '/');
+    }
+
+    public function getLessonsCountAttribute($value): int
+    {
+        if ($value !== null) {
+            return (int) $value;
+        }
+
+        if (array_key_exists('lessons_count', $this->attributes)) {
+            return (int) $this->attributes['lessons_count'];
+        }
+
+        if ($this->relationLoaded('lessons')) {
+            return (int) $this->lessons->count();
+        }
+
+        return 0;
+    }
+
+    public function getCommentsCountAttribute(): int
+    {
+        if (array_key_exists('comments_count', $this->attributes)) {
+            return (int) $this->attributes['comments_count'];
+        }
+
+        if (array_key_exists('reviews_count', $this->attributes)) {
+            return (int) $this->attributes['reviews_count'];
+        }
+
+        if ($this->relationLoaded('reviews')) {
+            return (int) $this->reviews->count();
+        }
+
+        return 0;
+    }
 
     public function category(): BelongsTo
     {

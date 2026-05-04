@@ -11,6 +11,8 @@ use App\Repositories\Category\CategoryRepository;
 use App\Repositories\Category\ICategoryRepository;
 use App\Repositories\Course\CourseRepository;
 use App\Repositories\Course\ICourseRepository;
+use App\Repositories\Dashboard\DashboardRepository;
+use App\Repositories\Dashboard\IDashboardRepository;
 use App\Repositories\Developer\DeveloperRepository;
 use App\Repositories\Developer\IDeveloperRepository;
 use App\Repositories\Enrollment\EnrollmentRepository;
@@ -49,6 +51,8 @@ use App\Services\Enrollment\EnrollmentService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Lesson\ILessonService;
 use App\Services\Lesson\LessonService;
+use App\Services\LessonAccess\ILessonAccessService;
+use App\Services\LessonAccess\LessonAccessService;
 use App\Services\LessonNote\ILessonNoteService;
 use App\Services\LessonNote\LessonNoteService;
 use App\Services\Order\IOrderService;
@@ -91,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserRepository::class, UserRepository::class);
         $this->app->bind(IUserDeviceRepository::class, UserDeviceRepository::class);
         $this->app->bind(IDeveloperRepository::class, DeveloperRepository::class);
+        $this->app->bind(IDashboardRepository::class, DashboardRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
         $this->app->bind(ICategoryService::class, CategoryService::class);
@@ -99,6 +104,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IOrderItemService::class, OrderItemService::class);
         $this->app->bind(ICourseService::class, CourseService::class);
         $this->app->bind(ILessonService::class, LessonService::class);
+        $this->app->bind(ILessonAccessService::class, LessonAccessService::class);
         $this->app->bind(ILessonNoteService::class, LessonNoteService::class);
         $this->app->bind(IQuizService::class, QuizService::class);
         $this->app->bind(IStarService::class, StarService::class);

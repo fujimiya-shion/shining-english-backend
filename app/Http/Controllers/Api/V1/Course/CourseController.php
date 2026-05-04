@@ -68,11 +68,16 @@ class CourseController extends ApiController
             return $this->notfound();
         }
 
+        $isEnrolled = $this->enrollmentService->isEnrolled($user->id, $id);
+        $isFreeCourse = (int) ($course->price ?? 0) === 0;
+
         return $this->success(data: [
             'course_id' => $id,
-            'enrolled' => $this->enrollmentService->isEnrolled($user->id, $id),
+            'enrolled' => $isEnrolled,
             'pending_access' => $this->enrollmentService->hasPendingEnrollment($user->id, $id),
             'in_cart' => $this->cartService->hasCourse($user->id, $id),
+            'is_free_course' => $isFreeCourse,
+            'can_enroll_free' => $isFreeCourse && ! $isEnrolled,
         ]);
     }
 

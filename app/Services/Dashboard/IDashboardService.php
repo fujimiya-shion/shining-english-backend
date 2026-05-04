@@ -2,11 +2,9 @@
 
 namespace App\Services\Dashboard;
 
+use App\DTO\Dashboard\DashboardOverviewResponse;
+
 interface IDashboardService
 {
-    /**
-     * @return array<string, mixed>
-     */
-    public function overview(int $userId): array;
+    public function overview(int $userId): DashboardOverviewResponse;
 }
-
