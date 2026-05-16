@@ -8,6 +8,7 @@ use App\Models\BlogTag;
 use App\Models\BlogUnlock;
 use App\Models\Category;
 use App\Models\City;
+use App\Models\Contact;
 use App\Models\Course;
 use App\Models\CourseReview;
 use App\Models\Lesson;
@@ -58,6 +59,7 @@ class DatabaseSeeder extends Seeder
         Blog::query()->truncate();
         BlogTag::query()->truncate();
         CourseReview::query()->truncate();
+        Contact::query()->truncate();
         Lesson::query()->truncate();
         Course::query()->truncate();
         Level::query()->truncate();
