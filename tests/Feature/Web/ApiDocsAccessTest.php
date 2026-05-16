@@ -6,10 +6,10 @@ use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
 
-it('redirects guests to admin login when opening api docs', function (): void {
+it('forbids guests from opening api docs', function (): void {
     $response = $this->get('/docs/api');
 
-    $response->assertRedirect();
+    $response->assertForbidden();
 });
 
 it('forbids admin without api docs permission', function (): void {
