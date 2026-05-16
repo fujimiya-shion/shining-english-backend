@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\V1\User;
+namespace App\Http\Requests\Api\V1\Contact;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class ContactStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -18,9 +18,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'phone' => ['required', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:6'],
+            'email' => ['required', 'email'],
+            'message' => ['required', 'string', 'max:5000'],
             'recaptcha_token' => ['required', 'string'],
         ];
     }
@@ -34,11 +33,9 @@ class RegisterRequest extends FormRequest
             'name.required' => 'Name is required.',
             'email.required' => 'Email is required.',
             'email.email' => 'Email must be valid.',
-            'email.unique' => 'Email already exists.',
-            'phone.required' => 'Phone is required.',
-            'password.required' => 'Password is required.',
-            'password.min' => 'Password must be at least 6 characters.',
+            'message.required' => 'Message is required.',
             'recaptcha_token.required' => 'reCAPTCHA token is required.',
         ];
     }
 }
+

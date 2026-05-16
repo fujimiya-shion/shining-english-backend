@@ -69,6 +69,8 @@ use App\Services\OrderItem\IOrderItemService;
 use App\Services\OrderItem\OrderItemService;
 use App\Services\Quiz\IQuizService;
 use App\Services\Quiz\QuizService;
+use App\Services\Security\Recaptcha\IRecaptchaVerifier;
+use App\Services\Security\Recaptcha\RecaptchaVerifier;
 use App\Services\Star\IStarService;
 use App\Services\Star\StarService;
 use App\Services\StarTransaction\IStarTransactionService;
@@ -120,6 +122,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ILessonAccessService::class, LessonAccessService::class);
         $this->app->bind(ILessonNoteService::class, LessonNoteService::class);
         $this->app->bind(IQuizService::class, QuizService::class);
+        $this->app->bind(IRecaptchaVerifier::class, RecaptchaVerifier::class);
         $this->app->bind(IStarService::class, StarService::class);
         $this->app->bind(IStarTransactionService::class, StarTransactionService::class);
         $this->app->bind(IUserQuizAttemptService::class, UserQuizAttemptService::class);
