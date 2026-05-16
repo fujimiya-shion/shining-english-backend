@@ -16,6 +16,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\Str;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -24,7 +25,6 @@ class AdminPanelProvider extends PanelProvider
         $configuration = $panel
             ->default()
             ->id('admin')
-            ->path('admin')
             ->login()
             ->authGuard('admin')
             ->plugins([
@@ -63,24 +63,14 @@ class AdminPanelProvider extends PanelProvider
         return $this->configureEnvironmentDomain($configuration);
     }
 
-    private function configureEnvironmentDomain(Panel $panel): Panel {
-        $configuration = $panel;
-        $appDomain = env('APP_DOMAIN');
+    private function configureEnvironmentDomain(Panel $panel): Panel
+    {
+        if($this->app->environment(['local', 'testing']))
+            return $panel->path('admin');
 
-        if ($this->app->environment('staging')) {
-            $domain = "staging-cms.$appDomain";
-            $configuration = $panel
-                ->domain($domain)
-                ->path('/');
-        }
-
-        if ($this->app->environment('production')) {
-            $domain = "cms.$appDomain";
-            $configuration = $panel
-                ->domain($domain)
-                ->path('/');
-        }
-
-        return $configuration;
+        $domain = config('app.domain');
+        return $panel
+            ->path('/')
+            ->domain($domain);
     }
 }
