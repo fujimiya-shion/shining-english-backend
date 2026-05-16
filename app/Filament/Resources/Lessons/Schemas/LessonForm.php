@@ -224,6 +224,12 @@ class LessonForm
                                 }
                             })
                             ->columnSpan(4),
+                        Toggle::make('is_preview_free')
+                            ->label('Học thử miễn phí')
+                            ->helperText('Cho phép học viên chưa mua khóa học xem video của bài học này.')
+                            ->inline(false)
+                            ->default(false)
+                            ->columnSpan(4),
                     ]),
                 Section::make('Quiz')
                     ->relationship('quiz')

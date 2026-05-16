@@ -38,6 +38,7 @@ class Lesson extends Model
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
+        'is_preview_free',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class Lesson extends Model
         'group_order' => 'integer',
         'lesson_order' => 'integer',
         'duration_minutes' => 'integer',
+        'is_preview_free' => 'boolean',
         'documents' => 'array',
         'document_names' => 'array',
     ];
