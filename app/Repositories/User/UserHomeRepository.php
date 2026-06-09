@@ -61,7 +61,7 @@ class UserHomeRepository implements IUserHomeRepository
             bannerActionButtons: [
                 new HomeBannerActionButton(
                     title: 'Trải nghiệm miễn phí',
-                    action: '/free-trial',
+                    action: '/blogs',
                     type: HomeBannerActionButtonTypes::PRIMARY,
                 ),
                 new HomeBannerActionButton(
@@ -101,7 +101,7 @@ class UserHomeRepository implements IUserHomeRepository
             actions: [
                 new HomeHeroActionButton(
                     title: 'Trải nghiệm miễn phí',
-                    action: '/free-trial',
+                    action: '/blogs',
                     type: 'primary',
                 ),
                 new HomeHeroActionButton(

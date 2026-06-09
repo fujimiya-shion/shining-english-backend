@@ -21,6 +21,9 @@ class OrderStoreRequest extends FormRequest
             'payment_method' => ['nullable', 'string', 'in:cod,payos'],
             'course_id' => ['required_if:type,buy_now', 'integer'],
             'quantity' => ['nullable', 'integer', 'min:1'],
+            'buyer_name' => ['nullable', 'string', 'max:255'],
+            'buyer_email' => ['nullable', 'email:rfc', 'max:255'],
+            'buyer_phone' => ['nullable', 'string', 'max:30'],
         ];
     }
 
@@ -37,6 +40,9 @@ class OrderStoreRequest extends FormRequest
             'course_id.integer' => 'Course id must be an integer.',
             'quantity.integer' => 'Quantity must be an integer.',
             'quantity.min' => 'Quantity must be at least 1.',
+            'buyer_name.string' => 'Buyer name must be a string.',
+            'buyer_email.email' => 'Buyer email must be a valid email address.',
+            'buyer_phone.string' => 'Buyer phone must be a string.',
         ];
     }
 }

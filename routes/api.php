@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
 use App\Http\Controllers\Api\V1\QuizAttempt\QuizAttemptController;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
+use App\Http\Controllers\Api\V1\Transaction\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\HomeController;
 use App\Http\Controllers\Api\V1\User\UserController;
@@ -19,6 +20,11 @@ use App\Http\Middleware\VerifyUserToken;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/v1')->group(function () {
+    Route::controller(PaymentWebhookController::class)
+        ->prefix('/payments/webhooks')
+        ->group(function () {
+            Route::post('/payos', 'payos');
+        });
 
     Route::controller(DeveloperController::class)
         ->group(function () {

@@ -22,6 +22,10 @@ class Order extends Model
         'total_amount',
         'status',
         'payment_method',
+        'payment_reference',
+        'payment_checkout_url',
+        'payment_metadata',
+        'paid_at',
         'placed_at',
     ];
 
@@ -32,6 +36,8 @@ class Order extends Model
     {
         return [
             'total_amount' => 'integer',
+            'payment_metadata' => 'array',
+            'paid_at' => 'datetime',
             'placed_at' => 'datetime',
             'status' => OrderStatus::class,
             'payment_method' => PaymentMethod::class,
