@@ -9,7 +9,7 @@ use App\Models\CourseReview;
 class HomeTestimonialResponse extends AHomePayloadResponse
 {
     /**
-     * @param list<CourseReview> $reviews
+     * @param  list<CourseReview>  $reviews
      */
     public function __construct(
         public string $title,
@@ -30,6 +30,7 @@ class HomeTestimonialResponse extends AHomePayloadResponse
             'title' => $this->title,
             'description' => $this->description,
             'items' => $this->reviews,
+            'reviews' => $this->reviews,
         ];
     }
 }

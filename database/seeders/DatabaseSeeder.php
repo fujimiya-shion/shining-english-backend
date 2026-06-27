@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Admin;
 use App\Models\Blog;
 use App\Models\BlogTag;
-use App\Models\BlogUnlock;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Contact;
@@ -55,7 +54,6 @@ class DatabaseSeeder extends Seeder
         Schema::disableForeignKeyConstraints();
 
         LessonComment::query()->truncate();
-        BlogUnlock::query()->truncate();
         Blog::query()->truncate();
         BlogTag::query()->truncate();
         CourseReview::query()->truncate();

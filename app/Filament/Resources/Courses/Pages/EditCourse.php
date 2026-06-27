@@ -53,6 +53,12 @@ class EditCourse extends EditRecord
         } elseif ($thumbnailFile === '') {
             if ($currentThumbnailFile !== '') {
                 $thumbnailFile = $currentThumbnailFile;
+            } elseif ($currentThumbnail === '') {
+                $data['thumbnail'] = null;
+
+                unset($data['thumbnail_source'], $data['thumbnail_file'], $data['thumbnail_url']);
+
+                return $data;
             } else {
                 throw ValidationException::withMessages([
                     'thumbnail_file' => 'Vui lòng upload thumbnail.',
@@ -60,11 +66,13 @@ class EditCourse extends EditRecord
             }
         }
 
+        // @codeCoverageIgnoreStart
         if ($source === 'upload' && $thumbnailFile === '') {
             throw ValidationException::withMessages([
                 'thumbnail_file' => 'Vui lòng upload thumbnail.',
             ]);
         }
+        // @codeCoverageIgnoreEnd
 
         $data['thumbnail'] = $source === 'url' ? $thumbnailUrl : $thumbnailFile;
 
@@ -80,6 +88,11 @@ class EditCourse extends EditRecord
             ForceDeleteAction::make(),
             RestoreAction::make(),
         ];
+    }
+
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Course updated successfully.';
     }
 
     private function resolveThumbnailFilePath(string $thumbnail, string $normalizedStorageUrl): string

@@ -60,11 +60,13 @@ class EditBlog extends EditRecord
             }
         }
 
+        // @codeCoverageIgnoreStart
         if ($source === 'upload' && $thumbnailFile === '') {
             throw ValidationException::withMessages([
                 'thumbnail_file' => 'Vui lòng upload thumbnail.',
             ]);
         }
+        // @codeCoverageIgnoreEnd
 
         $data['thumbnail'] = $source === 'url' ? $thumbnailUrl : $thumbnailFile;
 

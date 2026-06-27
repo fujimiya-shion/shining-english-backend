@@ -8,6 +8,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\Model;
 
 test('quizzes table defines expected columns', function (): void {
     $table = QuizzesTable::configure(makeTable());
@@ -31,12 +32,16 @@ test('quizzes table registers filters', function (): void {
     expect($filters[1])->toBeInstanceOf(TrashedFilter::class);
 });
 
-test('quizzes table registers edit record action', function (): void {
+test('quizzes table registers record actions', function (): void {
     $table = QuizzesTable::configure(makeTable());
 
     $actions = $table->getRecordActions();
 
-    expect(actionClassList($actions))->toEqual([EditAction::class]);
+    expect(actionClassList($actions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 });
 
 test('quizzes table registers bulk action group', function (): void {
@@ -54,4 +59,30 @@ test('quizzes table registers bulk action group', function (): void {
         ForceDeleteBulkAction::class,
         RestoreBulkAction::class,
     ]);
+});
+
+test('quizzes table duplicates records', function (): void {
+    $table = QuizzesTable::configure(makeTable());
+    $actions = $table->getRecordActions();
+
+    $record = new class extends Model
+    {
+        public static ?Model $saved = null;
+
+        public $timestamps = false;
+
+        protected $guarded = [];
+
+        public function save(array $options = []): bool
+        {
+            self::$saved = $this;
+
+            return true;
+        }
+    };
+    $record->pass_percent = 80;
+
+    $actions[1]->getActionFunction()($record);
+
+    expect($record::$saved?->pass_percent)->toBe(80);
 });

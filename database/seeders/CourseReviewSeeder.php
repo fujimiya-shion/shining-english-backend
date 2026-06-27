@@ -25,14 +25,23 @@ class CourseReviewSeeder extends Seeder
             ->select(['id'])
             ->chunkById(50, function ($courses) use ($userIds): void {
                 foreach ($courses as $course) {
-                    $count = fake()->numberBetween(2, 6);
-                    for ($index = 1; $index <= $count; $index++) {
-                        CourseReview::query()->create([
-                            'course_id' => $course->id,
-                            'user_id' => fake()->randomElement($userIds),
-                            'rating' => fake()->numberBetween(3, 5),
-                            'content' => fake()->sentence(18),
-                        ]);
+                    $count = min(fake()->numberBetween(2, 6), count($userIds));
+                    $reviewUserIds = collect($userIds)
+                        ->shuffle()
+                        ->take($count)
+                        ->values();
+
+                    foreach ($reviewUserIds as $userId) {
+                        CourseReview::query()->updateOrCreate(
+                            [
+                                'course_id' => $course->id,
+                                'user_id' => $userId,
+                            ],
+                            [
+                                'rating' => fake()->numberBetween(3, 5),
+                                'content' => fake()->sentence(18),
+                            ],
+                        );
                     }
                 }
             });

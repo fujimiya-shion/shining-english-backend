@@ -38,3 +38,25 @@ it('sends reply mail to requester', function (): void {
             && $mail->replySubject === 'Re: Support';
     });
 });
+
+it('logs reply mail failures', function (): void {
+    Mail::shouldReceive('to')
+        ->once()
+        ->with('requester@example.com')
+        ->andReturnSelf();
+    Mail::shouldReceive('send')
+        ->once()
+        ->andThrow(new RuntimeException('smtp down'));
+    Log::shouldReceive('error')
+        ->once()
+        ->with('Failed to send contact reply mail.', Mockery::on(
+            fn (array $context): bool => $context['email'] === 'requester@example.com'
+                && $context['message'] === 'smtp down'
+        ));
+
+    $contact = Contact::factory()->create([
+        'email' => 'requester@example.com',
+    ]);
+
+    (new SendContactReplyMailJob($contact->id, 'Re: Support', 'Message'))->handle();
+});

@@ -50,3 +50,25 @@ it('sends company contact notification mail', function (): void {
         return $mail->hasTo('company@example.com') && $mail->contact->id === $contact->id;
     });
 });
+
+it('logs company contact notification mail failures', function (): void {
+    config()->set('mail.company_email', 'company@example.com');
+
+    Mail::shouldReceive('to')
+        ->once()
+        ->with('company@example.com')
+        ->andReturnSelf();
+    Mail::shouldReceive('send')
+        ->once()
+        ->andThrow(new RuntimeException('smtp down'));
+    Log::shouldReceive('error')
+        ->once()
+        ->with('Failed to send contact submission mail to company.', Mockery::on(
+            fn (array $context): bool => $context['company_email'] === 'company@example.com'
+                && $context['message'] === 'smtp down'
+        ));
+
+    $contact = Contact::factory()->create();
+
+    (new SendContactSubmittedMailJob($contact->id))->handle();
+});

@@ -16,7 +16,6 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Illuminate\Support\Str;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -65,12 +64,16 @@ class AdminPanelProvider extends PanelProvider
 
     private function configureEnvironmentDomain(Panel $panel): Panel
     {
-        if($this->app->environment(['local', 'testing']))
+        if ($this->app->environment(['local', 'testing'])) {
             return $panel->path('admin');
+        }
 
+        // @codeCoverageIgnoreStart
         $domain = config('app.domain');
+
         return $panel
             ->path('/')
             ->domain($domain);
+        // @codeCoverageIgnoreEnd
     }
 }

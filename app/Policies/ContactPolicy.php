@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\Contact;
@@ -65,4 +67,3 @@ class ContactPolicy
         return $authUser->can('Reorder:Contact');
     }
 }
-

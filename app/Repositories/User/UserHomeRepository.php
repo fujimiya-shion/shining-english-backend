@@ -28,20 +28,25 @@ use App\DTO\User\Page\Home\HomeStatisticResponse;
 use App\DTO\User\Page\Home\HomeTestimonialResponse;
 use App\Models\Course;
 use App\Models\CourseReview;
+use App\Models\Enrollment;
+use App\Models\Lesson;
 use App\Models\User;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UserHomeRepository implements IUserHomeRepository
 {
     public function getUserHomeData(?string $token): HomeResponse
     {
+        $metrics = $this->resolveHomeMetrics();
+
         return new HomeResponse([
             $this->makeBannerPayload(),
-            $this->makeHeroPayload(),
-            $this->makeCourseListingPayload(),
+            $this->makeHeroPayload($metrics),
+            $this->makeCourseListingPayload($token),
             $this->makeFeaturePayload(),
             $this->makeProcessPayload(),
             $this->makeTestimonialPayload(),
-            $this->makeStatisticPayload(),
+            $this->makeStatisticPayload($metrics),
             $this->makeCtaPayload(),
         ]);
     }
@@ -49,14 +54,14 @@ class UserHomeRepository implements IUserHomeRepository
     private function makeBannerPayload(): HomeBannerResponse
     {
         return new HomeBannerResponse(
-            bannerLogo: '/images/logo.png',
+            bannerLogo: '/images/app_logo.svg',
             bannerEyebrow: 'More Than English',
             bannerTitle: 'More Than English. Find Your Shine.',
             bannerDescription: 'Change the way you see English — and yourself.',
             bannerActionButtons: [
                 new HomeBannerActionButton(
                     title: 'Trải nghiệm miễn phí',
-                    action: '/free-trial',
+                    action: '/blogs',
                     type: HomeBannerActionButtonTypes::PRIMARY,
                 ),
                 new HomeBannerActionButton(
@@ -67,17 +72,17 @@ class UserHomeRepository implements IUserHomeRepository
             ],
             bannerHighlights: [
                 new HomeBannerHighlight(
-                    text: 'Build confidence from the ground up.',
+                    text: 'Xây dựng sự tự tin từ gốc.',
                     iconPath: null,
                     iconType: 'book-open',
                 ),
                 new HomeBannerHighlight(
-                    text: '30 minutes a day.',
+                    text: '30 phút mỗi ngày.',
                     iconPath: null,
                     iconType: 'clock',
                 ),
                 new HomeBannerHighlight(
-                    text: 'English you can use in real life.',
+                    text: 'Để bạn dùng được tiếng Anh trong đời sống.',
                     iconPath: null,
                     iconType: 'award',
                 ),
@@ -85,7 +90,11 @@ class UserHomeRepository implements IUserHomeRepository
         );
     }
 
-    private function makeHeroPayload(): HomeHeroResponse {
+    /**
+     * @param  array{learner_count:int, content_count:int, average_rating:float}  $metrics
+     */
+    private function makeHeroPayload(array $metrics): HomeHeroResponse
+    {
         return new HomeHeroResponse(
             title: null,
             htmlTitle: 'More Than English.<br><span>Find Your Shine.</span>',
@@ -93,7 +102,7 @@ class UserHomeRepository implements IUserHomeRepository
             actions: [
                 new HomeHeroActionButton(
                     title: 'Trải nghiệm miễn phí',
-                    action: '/free-trial',
+                    action: '/blogs',
                     type: 'primary',
                 ),
                 new HomeHeroActionButton(
@@ -104,11 +113,11 @@ class UserHomeRepository implements IUserHomeRepository
             ],
             ctas: [
                 new HomeHeroCTA(
-                    title: '10K+',
+                    title: $this->formatCompactNumber($metrics['learner_count']),
                     description: 'Người Học Đã Theo',
                 ),
                 new HomeHeroCTA(
-                    title: '4.8★',
+                    title: $this->formatRating($metrics['average_rating']),
                     description: 'Đánh Giá Thật',
                 ),
             ],
@@ -133,17 +142,34 @@ class UserHomeRepository implements IUserHomeRepository
         );
     }
 
-    private function makeCourseListingPayload(): HomeCourseListingResponse {
+    private function makeCourseListingPayload(?string $token): HomeCourseListingResponse
+    {
+        $currentUser = $this->resolveCurrentUser($token);
         $courses = Course::query()
-                ->scopes(['active'])
-                ->with([
-                    'category:id,name',
-                    'level:id,name',
-                ])
-                ->withCardMetrics()
-                ->orderByDesc('created_at')
-                ->limit(4)
-                ->get();
+            ->scopes(['active'])
+            ->with([
+                'category:id,name',
+                'level:id,name',
+            ])
+            ->withCardMetrics()
+            ->orderByDesc('created_at')
+            ->limit(4)
+            ->get();
+
+        $enrolledCourseIds = [];
+        if ($currentUser instanceof User && $courses->isNotEmpty()) {
+            $enrolledCourseIds = Enrollment::query()
+                ->where('user_id', $currentUser->id)
+                ->whereIn('course_id', $courses->pluck('id')->all())
+                ->pluck('course_id')
+                ->map(static fn (mixed $courseId): int => (int) $courseId)
+                ->all();
+        }
+
+        $courses->each(function (Course $course) use ($enrolledCourseIds): void {
+            $course->setAttribute('enrolled', in_array((int) $course->id, $enrolledCourseIds, true));
+        });
+
         return new HomeCourseListingResponse(
             title: 'Khóa Học Mình Tự Làm',
             description: 'Nội dung tự quay – tự dạy, tập trung vào hiệu quả thực tế',
@@ -266,26 +292,23 @@ class UserHomeRepository implements IUserHomeRepository
         );
     }
 
-    private function makeStatisticPayload(): HomeStatisticResponse
+    /**
+     * @param  array{learner_count:int, content_count:int, average_rating:float}  $metrics
+     */
+    private function makeStatisticPayload(array $metrics): HomeStatisticResponse
     {
-        $learnerCount = 100;
-
-        $reviewCount = 400;
-
-        $averageRating = 4.8;
-
         return new HomeStatisticResponse(
             items: [
                 new HomeStatisticItem(
-                    value: $this->formatCompactNumber($learnerCount),
+                    value: $this->formatCompactNumber($metrics['learner_count']),
                     label: 'Người Học Đang Theo',
                 ),
                 new HomeStatisticItem(
-                    value: $this->formatCompactNumber($reviewCount),
-                    label: 'Đánh Giá Thật',
+                    value: $this->formatCompactNumber($metrics['content_count']),
+                    label: 'Video & Bài Luyện',
                 ),
                 new HomeStatisticItem(
-                    value: $this->formatRating($averageRating),
+                    value: $this->formatRating($metrics['average_rating']),
                     label: 'Điểm Đánh Giá',
                 ),
                 new HomeStatisticItem(
@@ -294,6 +317,46 @@ class UserHomeRepository implements IUserHomeRepository
                 ),
             ],
         );
+    }
+
+    /**
+     * @return array{learner_count:int, content_count:int, average_rating:float}
+     */
+    private function resolveHomeMetrics(): array
+    {
+        $learnerCount = (int) Course::query()
+            ->scopes(['active'])
+            ->sum('learned');
+
+        $contentCount = (int) Lesson::query()
+            ->whereHas('course', static fn ($query) => $query->active())
+            ->count();
+
+        $averageRating = (float) (CourseReview::query()
+            ->whereNotNull('rating')
+            ->avg('rating') ?? 0);
+
+        return [
+            'learner_count' => $learnerCount > 0 ? $learnerCount : 10000,
+            'content_count' => $contentCount > 0 ? $contentCount : 50,
+            'average_rating' => $averageRating > 0 ? $averageRating : 4.8,
+        ];
+    }
+
+    private function resolveCurrentUser(?string $token): ?User
+    {
+        $user = request()->user();
+        if ($user instanceof User) {
+            return $user;
+        }
+
+        if (! is_string($token) || trim($token) === '') {
+            return null;
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        return $accessToken?->tokenable instanceof User ? $accessToken->tokenable : null;
     }
 
     private function makeCtaPayload(): HomeCTAResponse
@@ -318,15 +381,15 @@ class UserHomeRepository implements IUserHomeRepository
 
     private function formatCompactNumber(int|string $number): string
     {
-        if(is_string($number)) {
+        if (is_string($number)) {
             return $number;
-        } 
-
-        if ($number >= 1000) {
-            return floor($number / 1000) . 'K+';
         }
 
-        return $number . '+';
+        if ($number >= 1000) {
+            return floor($number / 1000).'K+';
+        }
+
+        return $number.'+';
     }
 
     private function formatRating(int|float|null|string $rating): string
@@ -337,6 +400,6 @@ class UserHomeRepository implements IUserHomeRepository
 
         $rating = round((float) ($rating ?? 0), 1);
 
-        return $rating . '★';
+        return $rating.'★';
     }
 }

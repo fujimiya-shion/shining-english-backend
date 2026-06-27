@@ -326,3 +326,84 @@ it('streams lesson video inline', function (): void {
     expect((string) $response->headers->get('content-disposition'))->toContain('inline');
     expect((string) $response->headers->get('content-disposition'))->toContain('sample.mp4');
 });
+
+it('returns unauthorized for protected lesson endpoints', function (): void {
+    $lesson = new Lesson(['video_url' => 'lessons/sample.mp4']);
+    $lesson->id = 10;
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->times(3)->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->twice()->andReturnFalse();
+    $accessService->shouldReceive('canWatchLessonVideo')->once()->andReturnFalse();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
+
+    $controller = app()->make(LessonController::class);
+
+    assertJsonResponsePayload($controller->downloadDocument(makeUserLessonRequest(10), 10, 0), 401, [
+        'status' => false,
+        'status_code' => 401,
+    ]);
+    assertJsonResponsePayload($controller->video(makeUserLessonRequest(10), 10), 401, [
+        'status' => false,
+        'status_code' => 401,
+    ]);
+    assertJsonResponsePayload($controller->quiz(makeUserLessonRequest(10)), 401, [
+        'status' => false,
+        'status_code' => 401,
+    ]);
+});
+
+it('stores lesson comments for accessible lessons and handles guard branches', function (): void {
+    $lesson = new Lesson;
+    $lesson->id = 10;
+    $user = tap(new \App\Models\User, fn ($user) => $user->id = 7);
+
+    $service = \Mockery::mock(ILessonService::class);
+    $service->shouldReceive('getById')->once()->with(99)->andReturnNull();
+    $service->shouldReceive('getById')->twice()->with(10)->andReturn($lesson);
+    app()->instance(ILessonService::class, $service);
+
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canWatchLessonVideo')->once()->with(7, $lesson)->andReturnFalse();
+    $accessService->shouldReceive('canWatchLessonVideo')->once()->with(7, $lesson)->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+
+    $commentService = \Mockery::mock(ILessonCommentService::class);
+    $commentService->shouldReceive('createForUser')
+        ->once()
+        ->with(10, 7, 'Question content')
+        ->andReturn(new \App\Models\LessonComment([
+            'lesson_id' => 10,
+            'user_id' => 7,
+            'content' => 'Question content',
+        ]));
+    app()->instance(ILessonCommentService::class, $commentService);
+
+    $controller = app()->make(LessonController::class);
+
+    $missing = \App\Http\Requests\Api\V1\Lesson\LessonCommentStoreRequest::create('/lessons/99/comments', 'POST', ['content' => 'Question content']);
+    $missing->setContainer(app())->setRedirector(app('redirect'));
+    $missing->setUserResolver(fn () => $user);
+    $missing->validateResolved();
+    assertJsonResponsePayload($controller->storeComment($missing, 99), 404, ['status' => false, 'status_code' => 404]);
+
+    $unauth = \App\Http\Requests\Api\V1\Lesson\LessonCommentStoreRequest::create('/lessons/10/comments', 'POST', ['content' => 'Question content']);
+    $unauth->setContainer(app())->setRedirector(app('redirect'));
+    $unauth->setUserResolver(fn () => $user);
+    $unauth->validateResolved();
+    assertJsonResponsePayload($controller->storeComment($unauth, 10), 401, ['status' => false, 'status_code' => 401]);
+
+    $request = \App\Http\Requests\Api\V1\Lesson\LessonCommentStoreRequest::create('/lessons/10/comments', 'POST', ['content' => 'Question content']);
+    $request->setContainer(app())->setRedirector(app('redirect'));
+    $request->setUserResolver(fn () => $user);
+    $request->validateResolved();
+    assertJsonResponsePayload($controller->storeComment($request, 10), 201, [
+        'status' => true,
+        'status_code' => 201,
+        'message' => 'Comment submitted',
+    ]);
+});

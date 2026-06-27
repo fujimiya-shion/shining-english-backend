@@ -52,7 +52,6 @@ class BlogSeeder extends Seeder
 <h2>Cách chọn tài liệu</h2>
 <p>Ưu tiên video hội thoại ngắn, podcast có transcript hoặc lesson clip từ giáo viên bản ngữ nói rõ ràng. Tránh bắt đầu bằng TED Talk dài hoặc phim tốc độ quá nhanh, vì bạn sẽ dễ chuyển từ luyện phát âm sang chỉ cố gắng sống sót với nội dung.</p>
 HTML,
-                'required_star' => 0,
                 'status' => true,
                 'tag_slug' => 'tu-hoc-giao-tiep',
             ],
@@ -75,7 +74,6 @@ HTML,
 <h2>Mini drill 5 phút</h2>
 <p>Đọc theo cặp: <em>play - played</em>, <em>work - worked</em>, <em>bag - bags</em>, <em>rice - rise</em>. Thu âm một lượt chậm, một lượt tốc độ nói tự nhiên. Nghe lại và đánh dấu những từ mà âm cuối mất hẳn.</p>
 HTML,
-                'required_star' => 0,
                 'status' => true,
                 'tag_slug' => 'phat-am',
             ],
@@ -97,7 +95,6 @@ HTML,
 <p>Sau câu mở, hãy bám theo danh từ hoặc trải nghiệm người kia vừa nhắc tới. Ví dụ nếu họ nói làm trong HR, đừng nhảy sang kể về bản thân ngay. Hỏi thêm: <em>What kind of hiring are you focused on these days?</em></p>
 <p>Điểm mấu chốt là tốc độ vừa phải, câu ngắn, ánh mắt bình tĩnh. Người nghe đánh giá sự dễ chịu nhiều hơn độ phức tạp của từ vựng.</p>
 HTML,
-                'required_star' => 0,
                 'status' => true,
                 'tag_slug' => 'tu-hoc-giao-tiep',
             ],
@@ -123,7 +120,6 @@ HTML,
 <h2>Điểm đáng tiền nhất</h2>
 <p>Người học thường sợ thiếu từ vựng band cao, trong khi vấn đề thật là mỗi đoạn thân bài chưa có một luận điểm đủ cụ thể. Khi bạn viết rõ “vì sao” và “hậu quả là gì”, band sẽ tăng bền hơn nhiều so với việc cố nhét từ hiếm.</p>
 HTML,
-                'required_star' => 8,
                 'status' => true,
                 'tag_slug' => 'luyen-thi',
             ],
@@ -146,7 +142,6 @@ HTML,
 <h2>Cách luyện</h2>
 <p>Viết 5 tình huống ngắn theo đời sống của bạn hoặc gia đình, rồi đọc thành tiếng. Mục tiêu là bật ra được câu mô tả hoàn chỉnh trong 2 đến 3 giây, không dừng ở giữa để tìm từ.</p>
 HTML,
-                'required_star' => 5,
                 'status' => true,
                 'tag_slug' => 'tu-vung-theo-chu-de',
             ],
@@ -169,7 +164,6 @@ HTML,
 <h2>Cách luyện nhanh</h2>
 <p>Thay vì làm 20 câu trắc nghiệm, hãy tự nói 10 câu về đời mình: trải nghiệm, công việc, thói quen mới, thứ vừa hoàn thành. Sau đó gạch chân những câu có mốc thời gian cụ thể để kiểm tra xem bạn có đang dùng sai thì không.</p>
 HTML,
-                'required_star' => 6,
                 'status' => true,
                 'tag_slug' => 'ngu-phap-ung-dung',
             ],
@@ -193,7 +187,6 @@ HTML,
 </ul>
 <p>Muốn nghe tự nhiên hơn, hãy chuẩn bị sẵn 8 đến 10 mảnh nội dung cá nhân có thể tái sử dụng: giờ giấc làm việc, thói quen cuối tuần, một quán quen, một ứng dụng hay dùng, một kỹ năng đang học.</p>
 HTML,
-                'required_star' => 9,
                 'status' => true,
                 'tag_slug' => 'luyen-thi',
             ],
@@ -221,7 +214,6 @@ HTML,
 </ul>
 <p>Cách học hiệu quả là đặt từng cụm vào một câu đúng bối cảnh công việc của bạn. Nếu làm product, sales, HR hay ops thì ví dụ phải khác nhau. Khi ví dụ bám việc thật, bạn sẽ nhớ rất nhanh và dùng được ngay.</p>
 HTML,
-                'required_star' => 0,
                 'status' => true,
                 'tag_slug' => 'tu-vung-theo-chu-de',
             ],
@@ -234,7 +226,6 @@ HTML,
                 'title' => $blog['title'],
                 'description' => $blog['description'],
                 'status' => $blog['status'],
-                'required_star' => $blog['required_star'],
                 'tag_id' => $tag?->id,
             ];
 
