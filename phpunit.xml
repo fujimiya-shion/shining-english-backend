@@ -14,9 +14,7 @@
     </testsuites>
     <source>
         <include>
-            <file>app/Services/Enrollment/EnrollmentService.php</file>
-            <file>app/Services/Enrollment/IEnrollmentService.php</file>
-            <file>app/Jobs/RecalculateCourseAverageRatingJob.php</file>
+            <directory>app</directory>
         </include>
     </source>
     <php>
