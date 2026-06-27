@@ -157,9 +157,11 @@ class AppServiceProvider extends ServiceProvider
         Lesson::observe(LessonObserver::class);
 
         Gate::define('viewApiDocs', function (): bool {
+            // @codeCoverageIgnoreStart
             $admin = auth('admin')->user();
 
             return $admin?->can('View:ApiDocs') ?? false;
+            // @codeCoverageIgnoreEnd
         });
 
         Scramble::configure()

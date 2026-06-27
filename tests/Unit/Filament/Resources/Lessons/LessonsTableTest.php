@@ -9,6 +9,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\Model;
 
 test('lessons table defines expected columns', function (): void {
     $table = LessonsTable::configure(makeTable());
@@ -70,4 +71,32 @@ test('lessons table registers bulk action group', function (): void {
         ForceDeleteBulkAction::class,
         RestoreBulkAction::class,
     ]);
+});
+
+test('lessons table duplicates records', function (): void {
+    $table = LessonsTable::configure(makeTable());
+    $actions = $table->getRecordActions();
+
+    $record = new class extends Model
+    {
+        public static ?Model $saved = null;
+
+        public $timestamps = false;
+
+        protected $guarded = [];
+
+        public function save(array $options = []): bool
+        {
+            self::$saved = $this;
+
+            return true;
+        }
+    };
+    $record->name = 'Lesson one';
+    $record->slug = 'lesson-one';
+
+    $actions[1]->getActionFunction()($record);
+
+    expect($record::$saved?->name)->toBe('Lesson one (Sao chép)');
+    expect($record::$saved?->slug)->toBe('lesson-one-copy');
 });

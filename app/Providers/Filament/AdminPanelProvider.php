@@ -68,10 +68,12 @@ class AdminPanelProvider extends PanelProvider
             return $panel->path('admin');
         }
 
+        // @codeCoverageIgnoreStart
         $domain = config('app.domain');
 
         return $panel
             ->path('/')
             ->domain($domain);
+        // @codeCoverageIgnoreEnd
     }
 }

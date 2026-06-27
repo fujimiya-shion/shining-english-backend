@@ -3,10 +3,13 @@
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Requests\Api\V1\Course\CourseCurrentLessonRequest;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
+use App\Http\Requests\Api\V1\Course\CourseReviewStoreRequest;
 use App\Models\Course;
+use App\Models\CourseReview;
 use App\Models\User;
 use App\Services\Cart\ICartService;
 use App\Services\Course\ICourseService;
+use App\Services\CourseReview\ICourseReviewService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\ValueObjects\CourseFilter;
 use Illuminate\Http\Request;
@@ -580,4 +583,60 @@ it('returns not found and unauthorized branches in set current lesson', function
     $missingReq->setUserResolver(fn () => $user);
     $missingReq->validateResolved();
     assertJsonResponsePayload($controller->setCurrentLesson($missingReq, 13), 404, ['status' => false, 'status_code' => 404]);
+});
+
+it('stores course review for enrolled user and handles guard branches', function (): void {
+    $course = new Course;
+    $course->id = 12;
+    $user = new User;
+    $user->id = 7;
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getById')->once()->with(99)->andReturnNull();
+    $service->shouldReceive('getById')->once()->with(12)->andReturn($course);
+    $service->shouldReceive('getById')->once()->with(13)->andReturn($course);
+    app()->instance(ICourseService::class, $service);
+
+    $enrollmentService = \Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->once()->with(7, 12)->andReturnFalse();
+    $enrollmentService->shouldReceive('isEnrolled')->once()->with(7, 13)->andReturnTrue();
+    app()->instance(IEnrollmentService::class, $enrollmentService);
+
+    $review = new CourseReview([
+        'course_id' => 13,
+        'user_id' => 7,
+        'rating' => 5,
+        'content' => 'Great course',
+    ]);
+    $reviewService = \Mockery::mock(ICourseReviewService::class);
+    $reviewService->shouldReceive('upsertByUser')
+        ->once()
+        ->with(13, 7, 5, 'Great course')
+        ->andReturn($review);
+    app()->instance(ICourseReviewService::class, $reviewService);
+    app()->instance(ICartService::class, \Mockery::mock(ICartService::class));
+
+    $controller = app()->make(CourseController::class);
+
+    $missingRequest = CourseReviewStoreRequest::create('/courses/99/reviews', 'POST', ['rating' => 5, 'content' => 'Great course']);
+    $missingRequest->setContainer(app())->setRedirector(app('redirect'));
+    $missingRequest->setUserResolver(fn () => $user);
+    $missingRequest->validateResolved();
+    assertJsonResponsePayload($controller->storeReview($missingRequest, 99), 404, ['status' => false, 'status_code' => 404]);
+
+    $unauthRequest = CourseReviewStoreRequest::create('/courses/12/reviews', 'POST', ['rating' => 5, 'content' => 'Great course']);
+    $unauthRequest->setContainer(app())->setRedirector(app('redirect'));
+    $unauthRequest->setUserResolver(fn () => $user);
+    $unauthRequest->validateResolved();
+    assertJsonResponsePayload($controller->storeReview($unauthRequest, 12), 401, ['status' => false, 'status_code' => 401]);
+
+    $request = CourseReviewStoreRequest::create('/courses/13/reviews', 'POST', ['rating' => 5, 'content' => 'Great course']);
+    $request->setContainer(app())->setRedirector(app('redirect'));
+    $request->setUserResolver(fn () => $user);
+    $request->validateResolved();
+    assertJsonResponsePayload($controller->storeReview($request, 13), 201, [
+        'status' => true,
+        'status_code' => 201,
+        'message' => 'Review submitted',
+    ]);
 });
