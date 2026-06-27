@@ -23,7 +23,6 @@ test('blog form defines expected components', function (): void {
         'thumbnail_source',
         'thumbnail',
         'thumbnail_file',
-        'thumbnail_url',
         'description',
         'content',
     ]);
@@ -37,7 +36,6 @@ test('blog form defines expected components', function (): void {
     expect($components['thumbnail_source'])->toBeInstanceOf(Select::class);
     expect($components['thumbnail'])->toBeInstanceOf(Hidden::class);
     expect($components['thumbnail_file'])->toBeInstanceOf(OptimizeFileUpload::class);
-    expect($components['thumbnail_url'])->toBeInstanceOf(TextInput::class);
     expect($components['description'])->toBeInstanceOf(TextInput::class);
     expect($components['content'])->toBeInstanceOf(RichEditor::class);
 });
@@ -53,5 +51,4 @@ test('blog form marks required and dehydrated fields', function (): void {
     expect($components['customize_slug']->isDehydrated())->toBeFalse();
     expect($components['thumbnail']->isDehydrated())->toBeTrue();
     expect($components['thumbnail_file']->isDehydrated())->toBeTrue();
-    expect($components['thumbnail_url']->isDehydrated())->toBeTrue();
 });
