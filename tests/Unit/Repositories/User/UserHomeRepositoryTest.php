@@ -10,7 +10,9 @@ use App\Models\Level;
 use App\Models\User;
 use App\Repositories\User\UserHomeRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
+uses(TestCase::class);
 uses(RefreshDatabase::class);
 
 it('builds complete home payloads with defaults and enrollment flags', function (): void {

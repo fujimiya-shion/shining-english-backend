@@ -10,7 +10,9 @@ use App\Models\UserQuizAttempt;
 use App\Repositories\Dashboard\DashboardRepository;
 use App\Repositories\Dashboard\IDashboardRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
+uses(TestCase::class);
 uses(RefreshDatabase::class);
 
 it('implements dashboard repository and fetches dashboard rows', function (): void {

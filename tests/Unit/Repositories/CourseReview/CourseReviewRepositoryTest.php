@@ -6,7 +6,9 @@ use App\Models\User;
 use App\Repositories\CourseReview\CourseReviewRepository;
 use App\Repositories\CourseReview\ICourseReviewRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
+uses(TestCase::class);
 uses(RefreshDatabase::class);
 
 it('implements course review repository contract and finds by course and user', function (): void {
