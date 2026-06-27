@@ -7,6 +7,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\Model;
 
 it('registers expected columns', function (): void {
     $table = CategoriesTable::configure(makeTable());
@@ -47,4 +48,32 @@ it('adds record action + bulk toolbar actions', function (): void {
         ForceDeleteBulkAction::class,
         RestoreBulkAction::class,
     ]);
+});
+
+it('duplicates category records', function (): void {
+    $table = CategoriesTable::configure(makeTable());
+    $actions = $table->getRecordActions();
+
+    $record = new class extends Model
+    {
+        public static ?Model $saved = null;
+
+        public $timestamps = false;
+
+        protected $guarded = [];
+
+        public function save(array $options = []): bool
+        {
+            self::$saved = $this;
+
+            return true;
+        }
+    };
+    $record->name = 'General';
+    $record->slug = 'general';
+
+    $actions[1]->getActionFunction()($record);
+
+    expect($record::$saved?->name)->toBe('General (Sao chép)');
+    expect($record::$saved?->slug)->toBe('general-copy');
 });

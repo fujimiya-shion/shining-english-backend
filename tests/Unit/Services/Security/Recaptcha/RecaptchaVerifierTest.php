@@ -64,6 +64,17 @@ it('throws failed when response has no success field', function (): void {
         ->toThrow(RecaptchaVerificationException::class);
 });
 
+it('throws failed when response body is not a JSON object', function (): void {
+    config(['recaptcha.secret_key' => 'valid-key']);
+
+    Http::fake(['*' => Http::response('not-json', 200)]);
+
+    $service = new RecaptchaVerifier;
+
+    expect(fn () => $service->verifyOrFail('valid-token', 'login'))
+        ->toThrow(RecaptchaVerificationException::class);
+});
+
 it('throws failed when action does not match', function (): void {
     config(['recaptcha.secret_key' => 'valid-key']);
 
