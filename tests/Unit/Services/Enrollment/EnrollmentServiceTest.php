@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Enrollment;
 
 use App\Enums\OrderStatus;
+use App\Enums\StarTransactionType;
 use App\Jobs\GrantLessonStarRewardJob;
 use App\Models\Course;
 use App\Models\Enrollment;
@@ -14,6 +15,7 @@ use App\Repositories\Enrollment\EnrollmentRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Services\Enrollment\EnrollmentService;
 use App\Services\Enrollment\IEnrollmentService;
+use App\Services\Star\IStarService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -496,6 +498,146 @@ it('sets current lesson and clears previous current flags', function (): void {
         ->where('course_id', $course->id)
         ->where('lesson_id', $lessonB->id)
         ->value('is_current'))->toBeTrue();
+});
+
+it('awards course completion stars when completing the last lesson', function (): void {
+    config(['const.star.course_complete' => 10]);
+
+    $starService = Mockery::mock(IStarService::class);
+    $starService->shouldReceive('addStarByUserId')
+        ->once()
+        ->with(10, Mockery::type('int'), Mockery::type('string'), StarTransactionType::CourseComplete)
+        ->andReturnTrue();
+    app()->instance(IStarService::class, $starService);
+
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lesson = Lesson::query()->create([
+        'name' => 'Last Lesson',
+        'slug' => 'last-lesson',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/last.mp4',
+        'duration_minutes' => 5,
+        'has_quiz' => false,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lesson->id,
+        'completed_at' => null,
+        'is_current' => true,
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $result = $service->completeLesson($user->id, $course->id, $lesson->id);
+
+    expect($result)->not->toBeNull();
+    expect($result['current_lesson_id'])->toBeNull();
+    expect($result['completed_lesson_ids'])->toBe([$lesson->id]);
+
+    $reward = \Illuminate\Support\Facades\DB::table('lesson_star_rewards')
+        ->where('user_id', $user->id)
+        ->where('source', 'course_complete')
+        ->first();
+    expect($reward)->not->toBeNull();
+    expect((int) $reward->amount)->toBe(10);
+});
+
+it('does not award course completion stars again on duplicate completion', function (): void {
+    config(['const.star.course_complete' => 10]);
+
+    $starService = Mockery::mock(IStarService::class);
+    $starService->shouldReceive('addStarByUserId')
+        ->once()
+        ->with(10, Mockery::type('int'), Mockery::type('string'), StarTransactionType::CourseComplete)
+        ->andReturnTrue();
+    app()->instance(IStarService::class, $starService);
+
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lesson = Lesson::query()->create([
+        'name' => 'Last',
+        'slug' => 'last',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/last.mp4',
+        'duration_minutes' => 5,
+        'has_quiz' => false,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lesson->id,
+        'completed_at' => null,
+        'is_current' => true,
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+
+    // first completion awards stars
+    $service->completeLesson($user->id, $course->id, $lesson->id);
+
+    // second completion should NOT award stars again
+    $service->completeLesson($user->id, $course->id, $lesson->id);
+
+    $rewards = \Illuminate\Support\Facades\DB::table('lesson_star_rewards')
+        ->where('user_id', $user->id)
+        ->where('source', 'course_complete')
+        ->get();
+    expect($rewards)->toHaveCount(1);
+    expect((int) $rewards[0]->amount)->toBe(10);
+});
+
+it('skips course completion reward when config amount is zero', function (): void {
+    config(['const.star.course_complete' => 0]);
+
+    $starService = Mockery::mock(IStarService::class);
+    $starService->shouldReceive('addStarByUserId')->never();
+    app()->instance(IStarService::class, $starService);
+
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lesson = Lesson::query()->create([
+        'name' => 'Only Lesson',
+        'slug' => 'only-lesson',
+        'course_id' => $course->id,
+        'group_name' => 'M1',
+        'video_url' => 'lessons/only.mp4',
+        'duration_minutes' => 5,
+        'has_quiz' => false,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lesson->id,
+        'completed_at' => null,
+        'is_current' => true,
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $result = $service->completeLesson($user->id, $course->id, $lesson->id);
+
+    expect($result)->not->toBeNull();
+    expect($result['completed_lesson_ids'])->toBe([$lesson->id]);
 });
 
 it('ignores progress rows for soft deleted lessons when building progress payload', function (): void {
