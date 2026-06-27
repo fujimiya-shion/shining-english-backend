@@ -244,6 +244,42 @@ it('handles payos webhook with missing orderCode', function (): void {
     expect($strategy->handleWebhook(['data' => $data, 'signature' => $signature]))->toBeNull();
 });
 
+it('handles payos webhook with pending status', function (): void {
+    config(['payos.checksum_key' => 'checksum']);
+
+    $order = new class extends Order
+    {
+        public bool $saved = false;
+
+        public function save(array $options = []): bool
+        {
+            $this->saved = true;
+
+            return true;
+        }
+
+        public function fresh($with = []): ?Order
+        {
+            return $this;
+        }
+    };
+    $order->id = 777;
+    $order->total_amount = 1000;
+    $order->status = OrderStatus::Pending;
+    $order->payment_method = PaymentMethod::Payos;
+    $order->payment_metadata = [];
+
+    $repository = Mockery::mock(IOrderRepository::class);
+    $repository->shouldReceive('getById')->with(777, ['items.course'])->andReturn($order);
+
+    $data = ['orderCode' => 777, 'code' => '01'];
+    $signature = PayosSignature::sign($data, 'checksum');
+
+    $result = (new PayosPaymentStrategy($repository))->handleWebhook(['data' => $data, 'signature' => $signature]);
+
+    expect($result->status)->toBe(OrderStatus::Pending);
+});
+
 it('handles payos webhook with cancelled status', function (): void {
     config(['payos.checksum_key' => 'checksum']);
 
