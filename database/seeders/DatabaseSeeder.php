@@ -55,7 +55,6 @@ class DatabaseSeeder extends Seeder
         Schema::disableForeignKeyConstraints();
 
         LessonComment::query()->truncate();
-        BlogUnlock::query()->truncate();
         Blog::query()->truncate();
         BlogTag::query()->truncate();
         CourseReview::query()->truncate();
