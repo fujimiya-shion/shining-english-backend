@@ -28,7 +28,9 @@ it('returns overview for user with no activity', function (): void {
         ->andReturn($enrollments);
     $repository->shouldReceive('getLessonProgressByUserAndCourseIds')
         ->once()
-        ->with(1, $courseIds)
+        ->with(1, Mockery::on(function (Collection $ids) use ($courseIds): bool {
+            return $ids->values()->all() === $courseIds->values()->all();
+        }))
         ->andReturn($empty);
     $repository->shouldReceive('getRecentQuizAttemptsByUserId')
         ->once()

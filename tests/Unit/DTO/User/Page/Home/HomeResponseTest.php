@@ -128,5 +128,5 @@ it('HomeTestimonialResponse constructs and serializes', function (): void {
 
     expect($dto->type())->toBe('testimonials');
     expect($dto->data()['title'])->toBe('Cảm nhận');
-    expect($dto->toArray()['data']['reviews'])->toBe([]);
+    expect($dto->toArray()['data']['items'])->toBe([]);
 });

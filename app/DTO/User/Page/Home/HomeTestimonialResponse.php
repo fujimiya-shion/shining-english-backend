@@ -30,6 +30,7 @@ class HomeTestimonialResponse extends AHomePayloadResponse
             'title' => $this->title,
             'description' => $this->description,
             'items' => $this->reviews,
+            'reviews' => $this->reviews,
         ];
     }
 }
